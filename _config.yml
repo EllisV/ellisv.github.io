@@ -1,0 +1,39 @@
+# Title, decription and URL for your site
+# Can be used in your theme by calling 'site.title' and so on
+title: Eligijus Vitkauskas personal blog
+description: Eligijus Vitkauskas personal blog
+url: ellisv.github.io
+
+# Same as the title etc for your site but can instead be
+# called by using 'site.author.name' and so on
+author:
+  name: Eligijus Vitkauskas
+  email: eligijusvitkauskas@gmail.com
+  twitter: EligijusV
+
+# Used so Jekyll outputs the site correctly so Gulp can do what it wants
+source: src
+destination: serve
+
+# Hides your drafts and future posts
+future: false
+show_drafts: false
+# Gives you more accurate related posts
+lsi: true
+# Removes the upper limit for posts generated
+limit_posts: 0
+
+# Permalink structure and pagination options
+relative_permalinks: true
+permalink: pretty
+paginate: 10
+paginate_path: 'page:num'
+excerpt_separator: '<!--more-->'
+
+# Markdown library
+markdown: redcarpet
+# Markdown library options
+redcarpet:
+  extensions: ['no_intra_emphasis', 'tables', 'fenced_code_blocks', 'autolink', 'smart',
+              'strikethrough', 'superscript', 'underline', 'highlight', 'footnotes']
+highlighter: true
