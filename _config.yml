@@ -11,6 +11,7 @@ author:
   email: eligijusvitkauskas@gmail.com
   twitter: EligijusV
 
+# Exclude following files from jekyll build
 exclude:
   - node_modules
   - bower.json
