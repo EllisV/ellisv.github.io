@@ -1,5 +1,5 @@
 # Overrides the default URL, needed for your atom feed and sitemap
-url: localhost:4000
+url: localhost:3000
 
 # Enables future posts (posts with dates in the future) and drafts
 future: true

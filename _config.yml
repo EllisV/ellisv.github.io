@@ -2,6 +2,7 @@
 # Can be used in your theme by calling 'site.title' and so on
 title: Eligijus Vitkauskas personal blog
 description: Eligijus Vitkauskas personal blog
+lang: en
 url: ellisv.github.io
 
 # Same as the title etc for your site but can instead be
