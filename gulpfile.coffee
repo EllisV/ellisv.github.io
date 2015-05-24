@@ -9,7 +9,7 @@ browserSync = require('browser-sync').create()
 # Need a command for reloading webpages using BrowserSync
 reload = browserSync.reload
 
-gulp.task 'clean', del.bind(null, ['serve'])
+gulp.task 'clean', del.bind(null, ['_site'])
 
 gulp.task 'jekyll:dev', $.shell.task('bundle exec jekyll build --config _config.yml,_config.dev.yml')
 gulp.task 'jekyll-rebuild', ['jekyll:dev'], ->
@@ -18,12 +18,12 @@ gulp.task 'jekyll-rebuild', ['jekyll:dev'], ->
 gulp.task 'jekyll:prod', $.shell.task('bundle exec jekyll build')
 
 gulp.task 'serve', ['jekyll:dev'], ->
-  browserSync.init server: './serve'
+  browserSync.init server: './_site'
 
 # These tasks will look for files that change while serving and will auto-regenerate or
 # reload the website accordingly. Update or add other files you need to be watched.
 gulp.task 'watch', ->
-  gulp.watch ['src/**/*.md', 'src/**/*.html', 'src/**/*.xml', 'src/**/*.txt'], ['jekyll-rebuild']
+  gulp.watch ['./**/*.md', './**/*.html', './**/*.xml', './**/*.txt'], ['jekyll-rebuild']
 
 # Default task, run when just writing "gulp" in the terminal
 gulp.task 'default', ['serve', 'watch']
