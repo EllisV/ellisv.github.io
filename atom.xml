@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
  <title>Eligijus Vitkauskas personal blog</title>
- <link href="localhost:3000/atom.xml" rel="self"/>
- <link href="localhost:3000/"/>
- <updated>2015-07-26T18:56:13+03:00</updated>
- <id>localhost:3000</id>
+ <link href="ellisv.github.io/atom.xml" rel="self"/>
+ <link href="ellisv.github.io/"/>
+ <updated>2015-07-27T12:14:00+03:00</updated>
+ <id>ellisv.github.io</id>
  <author>
    <name>Eligijus Vitkauskas</name>
    <email>eligijusvitkauskas@gmail.com</email>
