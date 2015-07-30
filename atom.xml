@@ -2,24 +2,15 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
  <title>Eligijus Vitkauskas personal blog</title>
- <link href="http://localhost:3000/atom.xml" rel="self"/>
- <link href="http://localhost:3000/"/>
- <updated>2015-07-30T23:17:57+03:00</updated>
- <id>http://localhost:3000</id>
+ <link href="https://ellisv.github.io/atom.xml" rel="self"/>
+ <link href="https://ellisv.github.io/"/>
+ <updated>2015-07-30T23:21:42+03:00</updated>
+ <id>https://ellisv.github.io</id>
  <author>
    <name>Eligijus Vitkauskas</name>
    <email>eligijusvitkauskas@gmail.com</email>
  </author>
 
- 
- <entry>
-   <title>Get accurate auto complete in VIM</title>
-   <link href="http://localhost:3000/2015/07/27/accurate-autocomplete-in-vim/"/>
-   <updated>2015-07-27T23:09:46+03:00</updated>
-   <id>http://localhost:3000/2015/07/27/accurate-autocomplete-in-vim</id>
-   <content type="html">&lt;p&gt;Most of vim users who has been using IDE for ruby or php development in the past at some point missed accurate autocompletion feature. There were various attempts to make autocompletion possible. But they simply fell short due to limitations of vim.&lt;/p&gt;
-</content>
- </entry>
  
 
 </feed>
