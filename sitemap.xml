@@ -1,17 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://ellisv.github.io/</loc>
-    <lastmod>2015-07-27T23:11:03+03:00</lastmod>
+    <loc>http://localhost:3000/</loc>
+    <lastmod>2015-07-30T23:17:57+03:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   
+    <url>
+      <loc>http://localhost:3000/2015/07/27/accurate-autocomplete-in-vim/</loc>
+      
+        <lastmod>2015-07-27T23:09:46+03:00</lastmod>
+      
+      
+        <changefreq>monthly</changefreq>
+      
+      
+        <priority>0.5</priority>
+      
+    </url>
+  
   
   <url>
-    <loc>https://ellisv.github.io/about/</loc>
+    <loc>http://localhost:3000/about/</loc>
     
-      <lastmod>2015-07-27T23:11:03+03:00</lastmod>
+      <lastmod>2015-07-30T23:17:57+03:00</lastmod>
     
     
       <changefreq>monthly</changefreq>
@@ -22,22 +35,9 @@
   </url>
   
   <url>
-    <loc>https://ellisv.github.io/atom.xml</loc>
+    <loc>http://localhost:3000/atom.xml</loc>
     
-      <lastmod>2015-07-27T23:11:03+03:00</lastmod>
-    
-    
-      <changefreq>monthly</changefreq>
-    
-    
-      <priority>0.3</priority>
-    
-  </url>
-  
-  <url>
-    <loc>https://ellisv.github.io/</loc>
-    
-      <lastmod>2015-07-27T23:11:03+03:00</lastmod>
+      <lastmod>2015-07-30T23:17:57+03:00</lastmod>
     
     
       <changefreq>monthly</changefreq>
@@ -48,9 +48,22 @@
   </url>
   
   <url>
-    <loc>https://ellisv.github.io/sitemap.xml</loc>
+    <loc>http://localhost:3000/</loc>
     
-      <lastmod>2015-07-27T23:11:03+03:00</lastmod>
+      <lastmod>2015-07-30T23:17:57+03:00</lastmod>
+    
+    
+      <changefreq>monthly</changefreq>
+    
+    
+      <priority>0.3</priority>
+    
+  </url>
+  
+  <url>
+    <loc>http://localhost:3000/sitemap.xml</loc>
+    
+      <lastmod>2015-07-30T23:17:57+03:00</lastmod>
     
     
       <changefreq>monthly</changefreq>
