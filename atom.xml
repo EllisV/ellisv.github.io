@@ -4,7 +4,7 @@
  <title>Eligijus Vitkauskas personal blog</title>
  <link href="https://ellisv.github.io/atom.xml" rel="self"/>
  <link href="https://ellisv.github.io/"/>
- <updated>2015-08-05T00:28:42+03:00</updated>
+ <updated>2015-08-05T12:27:09+03:00</updated>
  <id>https://ellisv.github.io</id>
  <author>
    <name>Eligijus Vitkauskas</name>
@@ -214,13 +214,168 @@
 
 &lt;p&gt;Now you are able to use any class/interface/trait which is autoloaded by Composer in your OXID project.&lt;/p&gt;
 
-&lt;h2&gt;Why did I bother writing about Symfony ClassLoader?&lt;/h2&gt;
+&lt;h3&gt;Why did I bother writing about Symfony ClassLoader?&lt;/h3&gt;
 
 &lt;p&gt;Symfony ClassLoader chapter was written for learning purpose to show what problem Composer is designed to solve.&lt;/p&gt;
 
+&lt;h2&gt;Integrating Symfony Debug&lt;/h2&gt;
+
+&lt;p&gt;Chittity chattity, lets see the real benefit of that and integrate Symfony Debug component as an example. We can have all components developed outside the OXID and write a module as a bridge. We will have a symfony module to bridge various Symfony components (currently only Symfony Debug in this part). Install Symfony Debug with composer by running &lt;code&gt;composer require symfony/debug&lt;/code&gt; and start writing module &lt;code&gt;metadata.php&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// file: web/modules/eli/symfony/metadata.php&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; * Metadata version&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; */&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$sMetadataVersion&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;1.2&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; * Module information&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; */&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$aModule&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;&amp;#39;id&amp;#39;&lt;/span&gt;          &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;elisymfony&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;&amp;#39;title&amp;#39;&lt;/span&gt;       &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Symfony Bridge&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;&amp;#39;description&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Provides integration for OXID with various Symfony components&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;&amp;#39;thumbnail&amp;#39;&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;logo.png&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;&amp;#39;version&amp;#39;&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;0.0.1-DEV&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;&amp;#39;author&amp;#39;&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Eligijus Vitkauskas&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;&amp;#39;url&amp;#39;&lt;/span&gt;         &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;https://github.com/EllisV&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;&amp;#39;email&amp;#39;&lt;/span&gt;       &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;eligijusvitkauskas@gmail.com&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;&amp;#39;extend&amp;#39;&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;&amp;#39;oxshopcontrol&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;eli/symfony/core/elisymfonyoxshopcontrol&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We do not want to see debug outputs in production shop. Normally Symfony handles this by conditioning if Kernel is in develpment environment but we do yet have Symfony HttpKernel integrated. So lets rely on OXID check if shop runs in productive mode. Our &lt;code&gt;oxShopControl&lt;/code&gt; extension which we specify in &lt;code&gt;elisymfonyoxshopcontrol.php&lt;/code&gt; would like so:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// file: web/modules/eli/symfony/core/elisymfonyoxshopcontrol.php&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Symfony\Component\DependencyInjection\ContainerAwareInterface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Symfony\Component\DependencyInjection\ContainerInterface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Symfony\Component\Debug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; * Extension of oxShopControl OXID core class&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; * @see oxShopControl&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; */&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;eliSymfonyOxShopControl&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;eliSymfonyOxShopControl_parent&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Set default exception handler&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * If shop is not in productive mode than we register&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Symfony Debug component&amp;#39;s Exception and Error handlers&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * and do not call parent method&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Otherwise we stick to default OXID exception handler&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;_setDefaultExceptionHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;oxRegistry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;isProductiveMode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;parent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;_setDefaultExceptionHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;// It would be cool to only use Debug::enable() in here&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// but it also registers a DebugClassLoader which will&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// always throw an error because OXID does not care about&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// case when refering to objects&lt;/span&gt;
+
+        &lt;span class=&quot;nb&quot;&gt;ini_set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;display_errors&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;Debug\ExceptionHandler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$handler&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Debug\ErrorHandler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;throwAt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Handle system exception.&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * If shop is not in productive mode then we rethrow the exception.&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Otherwise we call default OXID behavior&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @param oxException $oEx&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @throws oxException&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;_handleSystemException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;oxRegistry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;isProductiveMode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;parent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;_handleSystemException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Handle cookie exception.&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * If shop is not in productive mode then we rethrow the exception.&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Otherwise we call default OXID behavior&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @param oxException $oEx&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @throws oxException&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;_handleCookieException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;oxRegistry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;isProductiveMode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;parent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;_handleCookieException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Handle database connection exception.&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * If shop is not in productive mode then we rethrow the exception.&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Otherwise we call default OXID behavior&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @param oxException $oEx&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @throws oxException&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;_handleDbConnectionException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;oxRegistry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;isProductiveMode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;parent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;_handleDbConnectionException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Handle base exception.&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * If shop is not in productive mode then we rethrow the exception.&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Otherwise we call default OXID behavior&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @param oxException $oEx&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @throws oxException&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;_handleBaseException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;oxRegistry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;isProductiveMode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;parent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;_handleBaseException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$oEx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;That is it! You now have fully (except for DebugClassLoader as OXID does not respect case sensitivity) integrated Symfony Debug component without writing much code. Writing all your code outside OXID framework gives you an ability to reuse it in other projects and this makes your OXID projects more lean and maintainable as you only need modules as bridges.&lt;/p&gt;
+
 &lt;h2&gt;OXID and Symfony post series&lt;/h2&gt;
 
-&lt;p&gt;You may be questioning yourself what this post has to do with Symfony because the result that we&amp;rsquo;ve achieved during this post does not involve having any Symfony components integrated in OXID. It is a preparation post for having Symfony components which will be covered in Part 2 and Part 3 of this post series.&lt;/p&gt;
+&lt;p&gt;This is a preparation post for having Symfony Components and Bundles. More will be covered in Part 2 and Part 3 of this post series.&lt;/p&gt;
 
 &lt;h2&gt;Further reading&lt;/h2&gt;
 

@@ -69,7 +69,150 @@
     <span class=nt>&quot;require&quot;</span><span class=p>:</span> <span class=p>{</span>
         <span class=nt>&quot;monolog/monolog&quot;</span><span class=p>:</span> <span class=s2>&quot;~1.13.1&quot;</span>
     <span class=p>}</span>
-<span class=p>}</span></code></pre></div><p>After running <code>composer install</code> or <code>composer update</code> (you have to have Composer installled in your system, read <a href=https://getcomposer.org/doc/00-intro.md#globally>official guide</a> on how to do that) it downloads all dependencies in <code>vendor</code> directory (by default) and generates <code>autoload.php</code> which is responsible for registering an autoloader.</p><p>Now you are able to use any class/interface/trait which is autoloaded by Composer in your OXID project.</p><h2>Why did I bother writing about Symfony ClassLoader?</h2><p>Symfony ClassLoader chapter was written for learning purpose to show what problem Composer is designed to solve.</p><h2>OXID and Symfony post series</h2><p>You may be questioning yourself what this post has to do with Symfony because the result that we&rsquo;ve achieved during this post does not involve having any Symfony components integrated in OXID. It is a preparation post for having Symfony components which will be covered in Part 2 and Part 3 of this post series.</p><h2>Further reading</h2><ul><li><a href="http://nelm.io/blog/2011/12/composer-part-1-what-why/">Composer: What &amp; Why</a></li><li><a href=https://getcomposer.org/doc/00-intro.md>Composer Introduction</a></li><li><a href=https://getcomposer.org/doc/04-schema.md>The composer.json Schema</a></li><li><a href=https://blog.engineyard.com/2014/composer-its-all-about-the-lock-file>Composer: It&rsquo;s All About the Lock File</a></li></ul></article><div id=disqus_thread></div><script type=text/javascript>
+<span class=p>}</span></code></pre></div><p>After running <code>composer install</code> or <code>composer update</code> (you have to have Composer installled in your system, read <a href=https://getcomposer.org/doc/00-intro.md#globally>official guide</a> on how to do that) it downloads all dependencies in <code>vendor</code> directory (by default) and generates <code>autoload.php</code> which is responsible for registering an autoloader.</p><p>Now you are able to use any class/interface/trait which is autoloaded by Composer in your OXID project.</p><h3>Why did I bother writing about Symfony ClassLoader?</h3><p>Symfony ClassLoader chapter was written for learning purpose to show what problem Composer is designed to solve.</p><h2>Integrating Symfony Debug</h2><p>Chittity chattity, lets see the real benefit of that and integrate Symfony Debug component as an example. We can have all components developed outside the OXID and write a module as a bridge. We will have a symfony module to bridge various Symfony components (currently only Symfony Debug in this part). Install Symfony Debug with composer by running <code>composer require symfony/debug</code> and start writing module <code>metadata.php</code>:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+<span class=c1>// file: web/modules/eli/symfony/metadata.php</span>
+
+<span class=sd>/**</span>
+<span class=sd> * Metadata version</span>
+<span class=sd> */</span>
+<span class=nv>$sMetadataVersion</span> <span class=o>=</span> <span class=s1>&#39;1.2&#39;</span><span class=p>;</span>
+
+<span class=sd>/**</span>
+<span class=sd> * Module information</span>
+<span class=sd> */</span>
+<span class=nv>$aModule</span> <span class=o>=</span> <span class=k>array</span><span class=p>(</span>
+    <span class=s1>&#39;id&#39;</span>          <span class=o>=&gt;</span> <span class=s1>&#39;elisymfony&#39;</span><span class=p>,</span>
+    <span class=s1>&#39;title&#39;</span>       <span class=o>=&gt;</span> <span class=s1>&#39;Symfony Bridge&#39;</span><span class=p>,</span>
+    <span class=s1>&#39;description&#39;</span> <span class=o>=&gt;</span> <span class=s1>&#39;Provides integration for OXID with various Symfony components&#39;</span><span class=p>,</span>
+    <span class=s1>&#39;thumbnail&#39;</span>   <span class=o>=&gt;</span> <span class=s1>&#39;logo.png&#39;</span><span class=p>,</span>
+    <span class=s1>&#39;version&#39;</span>     <span class=o>=&gt;</span> <span class=s1>&#39;0.0.1-DEV&#39;</span><span class=p>,</span>
+    <span class=s1>&#39;author&#39;</span>      <span class=o>=&gt;</span> <span class=s1>&#39;Eligijus Vitkauskas&#39;</span><span class=p>,</span>
+    <span class=s1>&#39;url&#39;</span>         <span class=o>=&gt;</span> <span class=s1>&#39;https://github.com/EllisV&#39;</span><span class=p>,</span>
+    <span class=s1>&#39;email&#39;</span>       <span class=o>=&gt;</span> <span class=s1>&#39;eligijusvitkauskas@gmail.com&#39;</span><span class=p>,</span>
+    <span class=s1>&#39;extend&#39;</span>      <span class=o>=&gt;</span> <span class=k>array</span><span class=p>(</span>
+        <span class=s1>&#39;oxshopcontrol&#39;</span> <span class=o>=&gt;</span> <span class=s1>&#39;eli/symfony/core/elisymfonyoxshopcontrol&#39;</span>
+    <span class=p>)</span>
+<span class=p>);</span></code></pre></div><p>We do not want to see debug outputs in production shop. Normally Symfony handles this by conditioning if Kernel is in develpment environment but we do yet have Symfony HttpKernel integrated. So lets rely on OXID check if shop runs in productive mode. Our <code>oxShopControl</code> extension which we specify in <code>elisymfonyoxshopcontrol.php</code> would like so:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+<span class=c1>// file: web/modules/eli/symfony/core/elisymfonyoxshopcontrol.php</span>
+
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerAwareInterface</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerInterface</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\Debug</span><span class=p>;</span>
+
+<span class=sd>/**</span>
+<span class=sd> * Extension of oxShopControl OXID core class</span>
+<span class=sd> *</span>
+<span class=sd> * @see oxShopControl</span>
+<span class=sd> */</span>
+<span class=k>class</span> <span class=nc>eliSymfonyOxShopControl</span> <span class=k>extends</span> <span class=nx>eliSymfonyOxShopControl_parent</span>
+<span class=p>{</span>
+    <span class=sd>/**</span>
+<span class=sd>     * Set default exception handler</span>
+<span class=sd>     *</span>
+<span class=sd>     * If shop is not in productive mode than we register</span>
+<span class=sd>     * Symfony Debug component&#39;s Exception and Error handlers</span>
+<span class=sd>     * and do not call parent method</span>
+<span class=sd>     *</span>
+<span class=sd>     * Otherwise we stick to default OXID exception handler</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>_setDefaultExceptionHandler</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=k>if</span> <span class=p>(</span><span class=nx>oxRegistry</span><span class=o>::</span><span class=na>getConfig</span><span class=p>()</span><span class=o>-&gt;</span><span class=na>isProductiveMode</span><span class=p>())</span> <span class=p>{</span>
+            <span class=k>parent</span><span class=o>::</span><span class=na>_setDefaultExceptionHandler</span><span class=p>();</span>
+            <span class=k>return</span><span class=p>;</span>
+        <span class=p>}</span>
+
+        <span class=c1>// It would be cool to only use Debug::enable() in here</span>
+        <span class=c1>// but it also registers a DebugClassLoader which will</span>
+        <span class=c1>// always throw an error because OXID does not care about</span>
+        <span class=c1>// case when refering to objects</span>
+
+        <span class=nb>ini_set</span><span class=p>(</span><span class=s1>&#39;display_errors&#39;</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>
+        <span class=nx>Debug\ExceptionHandler</span><span class=o>::</span><span class=na>register</span><span class=p>();</span>
+        <span class=nv>$handler</span> <span class=o>=</span> <span class=nx>Debug\ErrorHandler</span><span class=o>::</span><span class=na>register</span><span class=p>();</span>
+        <span class=nv>$handler</span><span class=o>-&gt;</span><span class=na>throwAt</span><span class=p>(</span><span class=mi>0</span><span class=p>,</span> <span class=k>true</span><span class=p>);</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Handle system exception.</span>
+<span class=sd>     *</span>
+<span class=sd>     * If shop is not in productive mode then we rethrow the exception.</span>
+<span class=sd>     * Otherwise we call default OXID behavior</span>
+<span class=sd>     *</span>
+<span class=sd>     * @param oxException $oEx</span>
+<span class=sd>     *</span>
+<span class=sd>     * @throws oxException</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>_handleSystemException</span><span class=p>(</span><span class=nv>$oEx</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=k>if</span> <span class=p>(</span><span class=nx>oxRegistry</span><span class=o>::</span><span class=na>getConfig</span><span class=p>()</span><span class=o>-&gt;</span><span class=na>isProductiveMode</span><span class=p>())</span> <span class=p>{</span>
+            <span class=k>parent</span><span class=o>::</span><span class=na>_handleSystemException</span><span class=p>(</span><span class=nv>$oEx</span><span class=p>);</span>
+            <span class=k>return</span><span class=p>;</span>
+        <span class=p>}</span>
+
+        <span class=k>throw</span> <span class=nv>$oEx</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Handle cookie exception.</span>
+<span class=sd>     *</span>
+<span class=sd>     * If shop is not in productive mode then we rethrow the exception.</span>
+<span class=sd>     * Otherwise we call default OXID behavior</span>
+<span class=sd>     *</span>
+<span class=sd>     * @param oxException $oEx</span>
+<span class=sd>     *</span>
+<span class=sd>     * @throws oxException</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>_handleCookieException</span><span class=p>(</span><span class=nv>$oEx</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=k>if</span> <span class=p>(</span><span class=nx>oxRegistry</span><span class=o>::</span><span class=na>getConfig</span><span class=p>()</span><span class=o>-&gt;</span><span class=na>isProductiveMode</span><span class=p>())</span> <span class=p>{</span>
+            <span class=k>parent</span><span class=o>::</span><span class=na>_handleCookieException</span><span class=p>(</span><span class=nv>$oEx</span><span class=p>);</span>
+            <span class=k>return</span><span class=p>;</span>
+        <span class=p>}</span>
+
+        <span class=k>throw</span> <span class=nv>$oEx</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Handle database connection exception.</span>
+<span class=sd>     *</span>
+<span class=sd>     * If shop is not in productive mode then we rethrow the exception.</span>
+<span class=sd>     * Otherwise we call default OXID behavior</span>
+<span class=sd>     *</span>
+<span class=sd>     * @param oxException $oEx</span>
+<span class=sd>     *</span>
+<span class=sd>     * @throws oxException</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>_handleDbConnectionException</span><span class=p>(</span><span class=nv>$oEx</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=k>if</span> <span class=p>(</span><span class=nx>oxRegistry</span><span class=o>::</span><span class=na>getConfig</span><span class=p>()</span><span class=o>-&gt;</span><span class=na>isProductiveMode</span><span class=p>())</span> <span class=p>{</span>
+            <span class=k>parent</span><span class=o>::</span><span class=na>_handleDbConnectionException</span><span class=p>(</span><span class=nv>$oEx</span><span class=p>);</span>
+            <span class=k>return</span><span class=p>;</span>
+        <span class=p>}</span>
+
+        <span class=k>throw</span> <span class=nv>$oEx</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Handle base exception.</span>
+<span class=sd>     *</span>
+<span class=sd>     * If shop is not in productive mode then we rethrow the exception.</span>
+<span class=sd>     * Otherwise we call default OXID behavior</span>
+<span class=sd>     *</span>
+<span class=sd>     * @param oxException $oEx</span>
+<span class=sd>     *</span>
+<span class=sd>     * @throws oxException</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>_handleBaseException</span><span class=p>(</span><span class=nv>$oEx</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=k>if</span> <span class=p>(</span><span class=nx>oxRegistry</span><span class=o>::</span><span class=na>getConfig</span><span class=p>()</span><span class=o>-&gt;</span><span class=na>isProductiveMode</span><span class=p>())</span> <span class=p>{</span>
+            <span class=k>parent</span><span class=o>::</span><span class=na>_handleBaseException</span><span class=p>(</span><span class=nv>$oEx</span><span class=p>);</span>
+            <span class=k>return</span><span class=p>;</span>
+        <span class=p>}</span>
+
+        <span class=k>throw</span> <span class=nv>$oEx</span><span class=p>;</span>
+    <span class=p>}</span>
+<span class=p>}</span></code></pre></div><p>That is it! You now have fully (except for DebugClassLoader as OXID does not respect case sensitivity) integrated Symfony Debug component without writing much code. Writing all your code outside OXID framework gives you an ability to reuse it in other projects and this makes your OXID projects more lean and maintainable as you only need modules as bridges.</p><h2>OXID and Symfony post series</h2><p>This is a preparation post for having Symfony Components and Bundles. More will be covered in Part 2 and Part 3 of this post series.</p><h2>Further reading</h2><ul><li><a href="http://nelm.io/blog/2011/12/composer-part-1-what-why/">Composer: What &amp; Why</a></li><li><a href=https://getcomposer.org/doc/00-intro.md>Composer Introduction</a></li><li><a href=https://getcomposer.org/doc/04-schema.md>The composer.json Schema</a></li><li><a href=https://blog.engineyard.com/2014/composer-its-all-about-the-lock-file>Composer: It&rsquo;s All About the Lock File</a></li></ul></article><div id=disqus_thread></div><script type=text/javascript>
     var disqus_shortname = 'ellisv';
     var disqus_identifier = '/2015/08/04/oxid-symfony-composer';
     (function() {
@@ -77,4 +220,4 @@
         dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
     })();
-</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></main><footer class=footer><small>&copy;<time datetime=2015-08-05T00:28:42+03:00>2015</time>. All rights reserved.</small></footer></div></body></html>
+</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></main><footer class=footer><small>&copy;<time datetime=2015-08-05T12:27:09+03:00>2015</time>. All rights reserved.</small></footer></div></body></html>
