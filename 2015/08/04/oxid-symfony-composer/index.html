@@ -95,8 +95,6 @@
 <span class=p>);</span></code></pre></div><p>We do not want to see debug outputs in production shop. Normally Symfony handles this by conditioning if Kernel is in develpment environment but we do yet have Symfony HttpKernel integrated. So lets rely on OXID check if shop runs in productive mode. Our <code>oxShopControl</code> extension which we specify in <code>elisymfonyoxshopcontrol.php</code> would like so:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
 <span class=c1>// file: web/modules/eli/symfony/core/elisymfonyoxshopcontrol.php</span>
 
-<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerAwareInterface</span><span class=p>;</span>
-<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerInterface</span><span class=p>;</span>
 <span class=k>use</span> <span class=nx>Symfony\Component\Debug</span><span class=p>;</span>
 
 <span class=sd>/**</span>
@@ -220,4 +218,4 @@
         dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
     })();
-</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></main><footer class=footer><small>&copy;<time datetime=2015-08-05T12:27:09+03:00>2015</time>. All rights reserved.</small></footer></div></body></html>
+</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></main><footer class=footer><small>&copy;<time datetime=2015-08-05T12:29:57+03:00>2015</time>. All rights reserved.</small></footer></div></body></html>

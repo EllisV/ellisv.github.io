@@ -4,7 +4,7 @@
  <title>Eligijus Vitkauskas personal blog</title>
  <link href="https://ellisv.github.io/atom.xml" rel="self"/>
  <link href="https://ellisv.github.io/"/>
- <updated>2015-08-05T12:27:09+03:00</updated>
+ <updated>2015-08-05T12:29:57+03:00</updated>
  <id>https://ellisv.github.io</id>
  <author>
    <name>Eligijus Vitkauskas</name>
@@ -252,8 +252,6 @@
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;// file: web/modules/eli/symfony/core/elisymfonyoxshopcontrol.php&lt;/span&gt;
 
-&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Symfony\Component\DependencyInjection\ContainerAwareInterface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Symfony\Component\DependencyInjection\ContainerInterface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Symfony\Component\Debug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
 
 &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
