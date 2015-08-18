@@ -1,0 +1,571 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="ie=edge"><meta name=description content="Eligijus Vitkauskas personal blog"><meta name=author content="Eligijus Vitkauskas"><meta name=viewport content="width=device-width, initial-scale=1"><title>OXID and Symfony Part 2&#58; DependencyInjection - Eligijus Vitkauskas personal blog</title><link rel=apple-touch-icon href=/apple-touch-icon.png><link rel=icon href=/favicon.ico><link rel=stylesheet href=/css/app.css><!--[if lt IE 9]>
+ <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+ <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+ <![endif]--><link rel=alternate type=application/rss+xml title=RSS href=/atom.xml><link type=text/plain rel=author href=/humans.txt></head><body><div class="container content"><header class=masthead><h3 class=masthead-title><a href="/" title=Home>Ellis</a> <small>about OXID</small></h3></header><main><article class=post><h1 class=post-title>OXID and Symfony Part 2&#58; DependencyInjection</h1><time datetime=2015-08-18T00:00:00+03:00 class=post-date>18 Aug 2015</time><p>Modern PHP application has lots of objects which are responsible for various things like email sending or data retrieval from database. Chances are great that you may want to have objects inside another one, especially if you follow <a href=https://en.wikipedia.org/wiki/Single_responsibility_principle>Single Responsibility Principle</a>. This part of OXID and Symfony post series will focus on explaining why <a href=https://en.wikipedia.org/wiki/Dependency_injection>Dependency Injection</a> and showing how to have <a href=http://symfony.com/doc/current/components/dependency_injection/introduction.html>Symfony DependencyInjection</a> component in OXID eShop.</p><p>I believe learning by example is the best way to learn, so lets discuss a case for WeatherService which:</p><ul><li>Is able to retrieve Weather object on passing a Location object;</li><li>Uses HTTP Client for fetching weather from weather provider;</li><li>Has a parser that transforms HTTP response into Weather object.</li></ul><p>Our concrete <code>YahooWeatherService</code> would look like so:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+
+<span class=k>class</span> <span class=nc>YahooWeatherService</span> <span class=k>implements</span> <span class=nx>WeatherServiceInterface</span>
+<span class=p>{</span>
+    <span class=k>protected</span> <span class=nv>$httpClient</span><span class=p>;</span>
+
+    <span class=k>protected</span> <span class=nv>$parser</span><span class=p>;</span>
+
+    <span class=k>public</span> <span class=k>function</span> <span class=nf>__construct</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>httpClient</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>HttpClient</span><span class=p>;</span>
+        <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>parser</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>YahooDataParser</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=k>public</span> <span class=k>function</span> <span class=nf>getWeatherForLocation</span><span class=p>(</span><span class=nx>Location</span> <span class=nv>$location</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=nv>$data</span> <span class=o>=</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>client</span><span class=o>-&gt;</span><span class=na>get</span><span class=p>(</span><span class=k>static</span><span class=o>::</span><span class=na>URL</span><span class=p>,</span> <span class=p>[</span>
+            <span class=s1>&#39;longitude&#39;</span> <span class=o>=&gt;</span> <span class=nv>$location</span><span class=o>-&gt;</span><span class=na>getLongitude</span><span class=p>(),</span>
+            <span class=s1>&#39;latitude&#39;</span>  <span class=o>=&gt;</span> <span class=nv>$location</span><span class=o>-&gt;</span><span class=na>getLatitude</span><span class=p>()</span>
+        <span class=p>]);</span>
+
+        <span class=k>return</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>parse</span><span class=o>-&gt;</span><span class=na>parseWeather</span><span class=p>(</span><span class=nv>$data</span><span class=p>);</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+
+<span class=nv>$weatherService</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>YahooWeatherService</span><span class=p>;</span></code></pre></div><p>DO NOT rush to facepalm just yet. First we are going to do this a wrong way so we would know a reason why it shouldn&rsquo;t be that way.</p><p>It is easy to create objects if you do it like in the example above but it is really hard to configure objects that this service depends on. What if <code>HttpClient</code> and <code>YahooDataParser</code> requires some parameters while constructing them. Everything would be hard coded into <code>YahooWeatherService</code> class. Also, every new instance of <code>YahooWeatherService</code> would create new instances for classes that it depends on (yes, <code>YahooWeatherService</code> is not that good of an example for this point, but <code>Product</code> class would me). We could solve this problem by using <a href=https://github.com/domnikl/DesignPatternsPHP/tree/master/Structural/Registry>registries</a>:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+
+<span class=k>class</span> <span class=nc>YahooWeatherService</span> <span class=k>implements</span> <span class=nx>WeatherServiceInterface</span>
+<span class=p>{</span>
+    <span class=c1>// ...</span>
+
+    <span class=k>public</span> <span class=k>function</span> <span class=nf>__construct</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>httpClient</span> <span class=o>=</span> <span class=nx>Registry</span><span class=o>::</span><span class=na>get</span><span class=p>(</span><span class=s1>&#39;http_client&#39;</span><span class=p>);</span>
+        <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>parser</span> <span class=o>=</span> <span class=nx>Registry</span><span class=o>::</span><span class=na>get</span><span class=p>(</span><span class=s1>&#39;yahoo_data_parser&#39;</span><span class=p>);</span>
+    <span class=p>}</span>
+
+    <span class=c1>// ...</span>
+<span class=p>}</span></code></pre></div><p>Now we do not have to care about configuration of <code>HttpClient</code> or <code>YahooDataParser</code>. Also we can easily switch concrete implementations of <code>HttpClient</code> as long as it has same interface. But still <code>YahooWeatherService</code> depends on a whole registry so your components can not be shared between projects that do not have this registry and it is really difficult to unit-test this class.</p><p>Lets go back to <code>YahooWeatherService</code> class. Instead of constructing object dependencies inside the object we inject them as construct parameters.</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+
+<span class=k>class</span> <span class=nc>YahooWeatherService</span> <span class=k>implements</span> <span class=nx>WeatherServiceInterface</span>
+<span class=p>{</span>
+    <span class=c1>// ...</span>
+
+    <span class=k>public</span> <span class=k>function</span> <span class=nf>__construct</span><span class=p>(</span><span class=nx>HttpClientInterface</span> <span class=nv>$httpClient</span><span class=p>,</span> <span class=nx>YahooDataParser</span> <span class=nv>$parser</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>httpClient</span> <span class=o>=</span> <span class=nv>$httpClient</span><span class=p>;</span>
+        <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>parser</span> <span class=o>=</span> <span class=nv>$parser</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=c1>// ...</span>
+<span class=p>}</span>
+
+<span class=nv>$httpClient</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>HttpClient</span><span class=p>;</span>
+<span class=nv>$parser</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>YahooDataParser</span><span class=p>;</span>
+
+<span class=nv>$weatherService</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>YahooWeatherService</span><span class=p>(</span><span class=nv>$httpClient</span><span class=p>,</span> <span class=nv>$parser</span><span class=p>);</span></code></pre></div><p>Now this weather service depends only on necessary classes or interfaces instead of depending on the whole registry. Also unit-testing became easier because we can pass mocks while constructing objects. But creating a new object became more complex, therefor we need object container.</p><h2>Object container</h2><p>Object container is an object which is aware of other objects and their dependencies which are created on demand. Other object must know now that they are being controlled by object container. Lets create very primitive object container:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+
+<span class=k>class</span> <span class=nc>Container</span>
+<span class=p>{</span>
+    <span class=k>protected</span> <span class=nv>$services</span> <span class=o>=</span> <span class=p>[];</span>
+
+    <span class=k>public</span> <span class=k>function</span> <span class=nf>setService</span><span class=p>(</span><span class=nv>$key</span><span class=p>,</span> <span class=nx>Closure</span> <span class=nv>$service</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>services</span><span class=p>[</span><span class=nv>$key</span><span class=p>]</span> <span class=o>=</span> <span class=nv>$service</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=k>public</span> <span class=k>function</span> <span class=nf>getService</span><span class=p>(</span><span class=nv>$key</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>services</span><span class=p>[</span><span class=nv>$key</span><span class=p>](</span><span class=nv>$this</span><span class=p>);</span>
+    <span class=p>}</span>
+<span class=p>}</span></code></pre></div><p>Maybe you have noticed that <code>setService</code> expects a function as a second parameter but not an actual object. This is that way because we want to create object only on demand. There is an example of usage:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=nv>$container</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>Container</span><span class=p>;</span>
+
+<span class=nv>$container</span><span class=o>-&gt;</span><span class=na>setService</span><span class=p>(</span><span class=s1>&#39;http_client&#39;</span><span class=p>,</span> <span class=k>function</span> <span class=p>(</span><span class=nv>$container</span><span class=p>)</span> <span class=p>{</span>
+    <span class=k>static</span> <span class=nv>$httpClient</span><span class=p>;</span>
+    <span class=k>if</span> <span class=p>(</span><span class=k>null</span> <span class=o>===</span> <span class=nv>$httpClient</span><span class=p>)</span> <span class=p>{</span>
+        <span class=nv>$parser</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>HttpClient</span><span class=p>;</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=nv>$httpClient</span><span class=p>;</span>
+<span class=p>});</span>
+
+<span class=nv>$container</span><span class=o>-&gt;</span><span class=na>setService</span><span class=p>(</span><span class=s1>&#39;yahoo_weather_parser&#39;</span><span class=p>,</span> <span class=k>function</span> <span class=p>(</span><span class=nv>$container</span><span class=p>)</span> <span class=p>{</span>
+    <span class=k>static</span> <span class=nv>$parser</span><span class=p>;</span>
+    <span class=k>if</span> <span class=p>(</span><span class=k>null</span> <span class=o>===</span> <span class=nv>$parser</span><span class=p>)</span> <span class=p>{</span>
+        <span class=nv>$parser</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>YahooWeatherParser</span><span class=p>;</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=nv>$parser</span><span class=p>;</span>
+<span class=p>});</span>
+
+<span class=nv>$container</span><span class=o>-&gt;</span><span class=na>setService</span><span class=p>(</span><span class=s1>&#39;yahoo_weather_service&#39;</span><span class=p>,</span> <span class=k>function</span> <span class=p>(</span><span class=nv>$container</span><span class=p>)</span> <span class=p>{</span>
+    <span class=k>static</span> <span class=nv>$weatherService</span><span class=p>;</span>
+
+    <span class=k>if</span> <span class=p>(</span><span class=k>null</span> <span class=o>!==</span> <span class=nv>$weatherService</span><span class=p>)</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=nv>$weatherService</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=nv>$httpClient</span> <span class=o>=</span> <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>getService</span><span class=p>(</span><span class=s1>&#39;http_client&#39;</span><span class=p>);</span>
+    <span class=nv>$parser</span> <span class=o>=</span> <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>getService</span><span class=p>(</span><span class=s1>&#39;yahoo_weather_parser&#39;</span><span class=p>);</span>
+
+    <span class=k>return</span> <span class=k>new</span> <span class=nx>YahooWeatherService</span><span class=p>(</span><span class=nv>$httpClient</span><span class=p>,</span> <span class=nv>$parser</span><span class=p>);</span>
+<span class=p>});</span>
+
+<span class=nv>$weatherServce</span> <span class=o>=</span> <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>getService</span><span class=p>(</span><span class=s1>&#39;yahoo_weather_service&#39;</span><span class=p>);</span></code></pre></div><p>Now we can easily get objects which are in object container without caring about dependencies. Code becomes more maintainable because we have only the one place where we write a recipe how those objects are dependent on each other.</p><h2>Symfony DependencyInjection Component</h2><p>As we have mentioned in the first part of this post series, there are dedicated projects which tackles specific problems and helps us not to reinvent the wheel. We have described a very simple usage of object container above but in most cases we want more from our object container, e.g. pass and use parameters or create object container from configuration file.</p><blockquote><p>Symfony DependencyInjection component allows you to standardize and centralize the way objects are constructed in your application.</p></blockquote><p>Or to put this in other words: Symfony DependencyInjection provides us with tools to create object container. We install this component via Composer (if you do not have Composer in your project read <a href="/2015/08/04/oxid-symfony-composer/">Part 1</a> of this post series) by requiring <code>symfony/dependency-injection</code>. Example usage of Symfony DependencyInjection:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerBuilder</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\Reference</span><span class=p>;</span>
+
+<span class=nv>$container</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>ContainerBuilder</span><span class=p>();</span>
+
+<span class=nv>$container</span><span class=o>-&gt;</span><span class=na>register</span><span class=p>(</span><span class=s1>&#39;http_client&#39;</span><span class=p>,</span> <span class=s1>&#39;HttpClient&#39;</span><span class=p>);</span>
+<span class=nv>$container</span><span class=o>-&gt;</span><span class=na>register</span><span class=p>(</span><span class=s1>&#39;yahoo_weather_parser&#39;</span><span class=p>,</span> <span class=s1>&#39;YahooWeatherParser&#39;</span><span class=p>);</span>
+
+<span class=nv>$container</span>
+    <span class=o>-&gt;</span><span class=na>register</span><span class=p>(</span><span class=s1>&#39;yahoo_weather_service&#39;</span><span class=p>,</span> <span class=s1>&#39;YahooWeatherService&#39;</span><span class=p>)</span>
+    <span class=o>-&gt;</span><span class=na>addArgument</span><span class=p>(</span><span class=k>new</span> <span class=nx>Reference</span><span class=p>(</span><span class=s1>&#39;http_client&#39;</span><span class=p>))</span>
+    <span class=o>-&gt;</span><span class=na>addArgument</span><span class=p>(</span><span class=k>new</span> <span class=nx>Reference</span><span class=p>(</span><span class=s1>&#39;yahoo_weather_parser&#39;</span><span class=p>));</span>
+
+<span class=nv>$weatherService</span> <span class=o>=</span> <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>get</span><span class=p>(</span><span class=s1>&#39;yahoo_weather_service&#39;</span><span class=p>);</span></code></pre></div><p>Now we can simply not worry about technical implementation of object container on your own. As we have a huge community doing maintenance for us.</p><h3>Container From Configuration File</h3><p>We can use configuration files instead of describing object relations in PHP code. It is recommended to describe object relations in configuration files even for small applications as it is more readable. To be able to achieve that we must install Symfony Config component and Symfony Yaml if you want your configration to be in yaml format. Example code:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerBuilder</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\Config\FileLocator</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\Loader\YamlFileLoader</span><span class=p>;</span>
+
+<span class=nv>$container</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>ContainerBuilder</span><span class=p>();</span>
+<span class=nv>$loader</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>YamlFileLoader</span><span class=p>(</span><span class=nv>$container</span><span class=p>,</span> <span class=k>new</span> <span class=nx>FileLocator</span><span class=p>(</span><span class=nx>__DIR__</span><span class=p>));</span>
+<span class=nv>$loader</span><span class=o>-&gt;</span><span class=na>load</span><span class=p>(</span><span class=s1>&#39;services.yml&#39;</span><span class=p>);</span></code></pre></div><p>And configuration file:</p><div class=highlight><pre><code class=language-yaml data-lang=yaml><span class=l-Scalar-Plain>services</span><span class=p-Indicator>:</span>
+  <span class=l-Scalar-Plain>http_client</span><span class=p-Indicator>:</span>
+    <span class=l-Scalar-Plain>class</span><span class=p-Indicator>:</span> <span class=l-Scalar-Plain>HttpClient</span>
+
+  <span class=l-Scalar-Plain>yahoo_weather_parser</span><span class=p-Indicator>:</span>
+    <span class=l-Scalar-Plain>class</span><span class=p-Indicator>:</span> <span class=l-Scalar-Plain>YahooWeatherParser</span>
+
+  <span class=l-Scalar-Plain>yahoo_weather_service</span><span class=p-Indicator>:</span>
+    <span class=l-Scalar-Plain>class</span><span class=p-Indicator>:</span> <span class=l-Scalar-Plain>YahooWeatherService</span>
+    <span class=l-Scalar-Plain>arguments</span><span class=p-Indicator>:</span> <span class=p-Indicator>[</span><span class=s>&#39;@http_client&#39;</span><span class=p-Indicator>,</span> <span class=s>&#39;@yahoo_weather_parser&#39;</span><span class=p-Indicator>]</span></code></pre></div><p>We can have lots of configuration files. This gives us an ability to group them.</p><h3>Container Compilation and Extensions</h3><p>Symfony DependencyInjection component allows us to compile object container. There are various of reasons why we want to do this, such as: better performance or checking for potential errors.</p><p>Object container can be compiled by calling <code>compile</code> method on <code>ContainerBuilder</code> object.</p><p>If we are compiling our container we have an ability to have extensions. The main purpose of extension is to register new services. Extensions gives us an ability to have modular application.</p><h2>Symfony DependencyInjection in OXID</h2><p>Symfony DependencyInjection component has way more capabilities than we have reviewed so far. We only did brief introduction to make you understand why and how to use it. Read more about Symfony DependencyInjection component at <a href=http://symfony.com/doc/current/components/dependency_injection/introduction.html>official website</a>.</p><p>Spoiler alert! We will end up not using an implementation which is described below. Container building is a responsibility of HttpKernel component. But it is still good to read an implementation to get the idea why you may want to use HttpKernel.</p><p>We want to have some sort of a kernel class where we will register dependency injection container extensions and compiler passes. Lets start from top to bottom. Create <code>app</code> directory. It will have main configuration files and <code>ContainerKernel.php</code> file. Directory tree:</p><div class=highlight><pre><code class=language-text data-lang=text>|_ app/
+|  |_ config/
+|  |  |_ config.yml
+|  |
+|  |_ ContainerKernel.php
+|_ ...
+|_ web/
+|  |_ ...
+|  |_ bootstrap.php
+|  |_ ...
+|
+|_ vendor/
+|  |_ ...
+|  |_ autoload.php
+|
+|_ composer.json
+|_ ...
+</code></pre></div><p>So our goal for <code>ContainerKernel.php</code> is that we could register extensions like so:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+
+<span class=k>use</span> <span class=nx>Ellis\Oxid\Bridge\DependencyInjection\ContainerKernel</span> <span class=k>as</span> <span class=nx>BaseContainerKernel</span><span class=p>;</span>
+
+<span class=k>class</span> <span class=nc>ContainerKernel</span> <span class=k>extends</span> <span class=nx>BaseContainerKernel</span>
+<span class=p>{</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>registerExtensions</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=p>[</span>
+            <span class=k>new</span> <span class=nx>ExtensionOne</span><span class=p>,</span>
+            <span class=k>new</span> <span class=nx>ExtensionTwo</span>
+        <span class=p>];</span>
+    <span class=p>}</span>
+
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>registerCompilerPasses</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=p>[</span>
+            <span class=k>new</span> <span class=nx>CompilerPassOne</span>
+        <span class=p>];</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * {@inheritdoc}</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>getWebDir</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=nx>__DIR__</span> <span class=o>.</span> <span class=s1>&#39;/../web&#39;</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * {@inheritdoc}</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>getCacheDir</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getWebDir</span><span class=p>()</span> <span class=o>.</span> <span class=s1>&#39;/tmp&#39;</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Load configuration to Container</span>
+<span class=sd>     *</span>
+<span class=sd>     * @param LoaderInterface $loader</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>registerContainerConfiguration</span><span class=p>(</span><span class=nx>LoaderInterface</span> <span class=nv>$loader</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=nv>$loader</span><span class=o>-&gt;</span><span class=na>load</span><span class=p>(</span><span class=nx>__DIR__</span> <span class=o>.</span> <span class=s1>&#39;/config/config.yml&#39;</span><span class=p>);</span>
+    <span class=p>}</span>
+<span class=p>}</span></code></pre></div><p>Now we need to think how we are going to make our container object accessible in OXID. I can think of three solutions:</p><ul><li>Make Container object as singleton in ContainerBridge component<ul><li>PRO: we do need to change OXID</li><li>CON: it is a singleton which we later have to support</li></ul></li><li>Make Container accessible via oxRegistry with <code>oxRegistry::get(&#39;container&#39;)</code>:<ul><li>PRO: it is using oxRegistry which familiar amongst OXID developers</li><li>CON: if you are going more Symfony way I am pretty sure you want to deprecate oxRegistry at some point of time, so you would have to readjust that again</li></ul></li><li>Inject Container on every instance of <code>ContainerAwareInterface</code> object constructed via oxNew<ul><li>PRO: we are not tied to oxRegistry or any other OXID object directly</li><li>CON: extension of oxNew to magically inject Container to <code>ContainerAwareInterface</code> objects</li></ul></li></ul><p>I very ofter think of second and third options. Can not make my mind yet. For example implementation I am going to go with a third option.</p><p>We will create a seperate component to bridge Symfony DependencyInjection into OXID. Normally this would be a seperate package installed by Composer but as we are not planning to keep this implementation for a long time lets do this within the source of our project. Edit <code>composer.json</code> to autoload files by PSR-4 rules for <code>src/</code> directory:</p><div class=highlight><pre><code class=language-json data-lang=json><span class=p>{</span>
+  <span class=nt>&quot;autoload&quot;</span><span class=p>:</span> <span class=p>{</span>
+    <span class=nt>&quot;psr-4&quot;</span><span class=p>:</span> <span class=p>{</span> <span class=nt>&quot;&quot;</span><span class=p>:</span> <span class=s2>&quot;src/&quot;</span> <span class=p>}</span>
+  <span class=p>},</span>
+  <span class=nt>&quot;require&quot;</span><span class=p>:</span> <span class=p>{</span>
+    <span class=nt>&quot;php&quot;</span><span class=p>:</span> <span class=s2>&quot;~5.4&quot;</span><span class=p>,</span>
+    <span class=nt>&quot;symfony/dependency-injection&quot;</span><span class=p>:</span> <span class=s2>&quot;~2.6.0&quot;</span><span class=p>,</span>
+    <span class=nt>&quot;symfony/proxy-manager-bridge&quot;</span><span class=p>:</span> <span class=s2>&quot;~2.6.0&quot;</span><span class=p>,</span>
+    <span class=nt>&quot;symfony/config&quot;</span><span class=p>:</span> <span class=s2>&quot;~2.6.0&quot;</span><span class=p>,</span>
+    <span class=nt>&quot;symfony/yaml&quot;</span><span class=p>:</span> <span class=s2>&quot;~2.6.0&quot;</span><span class=p>,</span>
+  <span class=p>}</span>
+<span class=p>}</span></code></pre></div><p>And after running <code>composer update</code> you will get autoloader regenerated. So now we can implement base ContainerKernel class:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+<span class=c1>// file: src/Ellis/Oxid/Bridge/DependencyInjection/ContainerKernel.php</span>
+
+<span class=k>namespace</span> <span class=nx>Ellis\Oxid\Bridge\DependencyInjection</span><span class=p>;</span>
+
+<span class=k>use</span> <span class=nx>Symfony\Component\Config\FileLocator</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\Config\ConfigCache</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ExtensionInterface</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerBuilder</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerInterface</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\Dumper\PhpDumper</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ParameterBag\ParameterBag</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Bridge\ProxyManager\LazyProxy\Instantiator\RuntimeInstantiator</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Bridge\ProxyManager\LazyProxy\PhpDumper\ProxyDumper</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\Config\Loader\LoaderResolver</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\Config\Loader\DelegatingLoader</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\Loader\XmlFileLoader</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\Loader\YamlFileLoader</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\Loader\IniFileLoader</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\Loader\PhpFileLoader</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\Loader\ClosureLoader</span><span class=p>;</span>
+
+<span class=sd>/**</span>
+<span class=sd> * Abstract Container Kernel</span>
+<span class=sd> */</span>
+<span class=k>abstract</span> <span class=k>class</span> <span class=nc>ContainerKernel</span>
+<span class=p>{</span>
+    <span class=sd>/**</span>
+<span class=sd>     * @var string</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=nv>$appDir</span><span class=p>;</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * @var bool</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=nv>$debug</span><span class=p>;</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Constructor.</span>
+<span class=sd>     *</span>
+<span class=sd>     * @param bool $debug</span>
+<span class=sd>     */</span>
+    <span class=k>public</span> <span class=k>function</span> <span class=nf>__construct</span><span class=p>(</span><span class=nv>$debug</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>debug</span> <span class=o>=</span> <span class=p>(</span><span class=nx>bool</span><span class=p>)</span> <span class=nv>$debug</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Register DependencyInjection container extensions</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return ExtensionInterface[]</span>
+<span class=sd>     */</span>
+    <span class=k>abstract</span> <span class=k>protected</span> <span class=k>function</span> <span class=nf>registerExtensions</span><span class=p>();</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Register DependencyInjection compiler passes</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return CompilerPassInterface[]</span>
+<span class=sd>     */</span>
+    <span class=k>abstract</span> <span class=k>protected</span> <span class=k>function</span> <span class=nf>registerCompilerPasses</span><span class=p>();</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Is debug mode</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return bool</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>isDebug</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>debug</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Get application directory path</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return string</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>getAppDir</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=k>if</span> <span class=p>(</span><span class=k>null</span> <span class=o>===</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>appDir</span><span class=p>)</span> <span class=p>{</span>
+            <span class=nv>$reflection</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>\ReflectionObject</span><span class=p>(</span><span class=nv>$this</span><span class=p>);</span>
+            <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>appDir</span> <span class=o>=</span> <span class=nb>str_replace</span><span class=p>(</span><span class=s1>&#39;\\&#39;</span><span class=p>,</span> <span class=s1>&#39;/&#39;</span><span class=p>,</span> <span class=nb>dirname</span><span class=p>(</span><span class=nv>$reflection</span><span class=o>-&gt;</span><span class=na>getFileName</span><span class=p>()));</span>
+        <span class=p>}</span>
+
+        <span class=k>return</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>appDir</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Get web directory path</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return string</span>
+<span class=sd>     */</span>
+    <span class=k>abstract</span> <span class=k>protected</span> <span class=k>function</span> <span class=nf>getWebDir</span><span class=p>();</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Get directory path where cache should be stored</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return string</span>
+<span class=sd>     */</span>
+    <span class=k>abstract</span> <span class=k>protected</span> <span class=k>function</span> <span class=nf>getCacheDir</span><span class=p>();</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Gets the container class.</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return string The container class</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>getContainerClass</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=p>(</span><span class=nv>$this</span><span class=o>-&gt;</span><span class=na>isDebug</span><span class=p>()</span> <span class=o>?</span> <span class=s1>&#39;Debug&#39;</span> <span class=o>:</span> <span class=s1>&#39;Project&#39;</span><span class=p>)</span> <span class=o>.</span> <span class=s1>&#39;Container&#39;</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Gets the container&#39;s base class.</span>
+<span class=sd>     *</span>
+<span class=sd>     * All names except Container must be fully qualified.</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return string</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>getContainerBaseClass</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=s1>&#39;Container&#39;</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Build service container from cache</span>
+<span class=sd>     *</span>
+<span class=sd>     * The cached version of the service container is used when fresh, otherwise the</span>
+<span class=sd>     * container is built.</span>
+<span class=sd>     */</span>
+    <span class=k>public</span> <span class=k>function</span> <span class=nf>buildContainerFromCache</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=nv>$class</span> <span class=o>=</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getContainerClass</span><span class=p>();</span>
+        <span class=nv>$cache</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>ConfigCache</span><span class=p>(</span><span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getCacheDir</span><span class=p>()</span><span class=o>.</span><span class=s1>&#39;/&#39;</span><span class=o>.</span><span class=nv>$class</span><span class=o>.</span><span class=s1>&#39;.php&#39;</span><span class=p>,</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>isDebug</span><span class=p>());</span>
+
+        <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=nv>$cache</span><span class=o>-&gt;</span><span class=na>isFresh</span><span class=p>())</span> <span class=p>{</span>
+            <span class=nv>$container</span> <span class=o>=</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>buildContainer</span><span class=p>();</span>
+            <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>compile</span><span class=p>();</span>
+            <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>dumpContainer</span><span class=p>(</span><span class=nv>$cache</span><span class=p>,</span> <span class=nv>$container</span><span class=p>,</span> <span class=nv>$class</span><span class=p>,</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getContainerBaseClass</span><span class=p>());</span>
+        <span class=p>}</span>
+
+        <span class=k>require_once</span> <span class=nv>$cache</span><span class=p>;</span>
+
+        <span class=k>return</span> <span class=k>new</span> <span class=nv>$class</span><span class=p>();</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Builds the service container.</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return ContainerBuilder</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>buildContainer</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=nv>$container</span> <span class=o>=</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getContainerBuilder</span><span class=p>();</span>
+        <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>prepareContainer</span><span class=p>(</span><span class=nv>$container</span><span class=p>);</span>
+
+        <span class=k>if</span> <span class=p>(</span><span class=k>null</span> <span class=o>!==</span> <span class=nv>$cont</span> <span class=o>=</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>registerContainerConfiguration</span><span class=p>(</span><span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getContainerLoader</span><span class=p>(</span><span class=nv>$container</span><span class=p>)))</span> <span class=p>{</span>
+            <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>merge</span><span class=p>(</span><span class=nv>$cont</span><span class=p>);</span>
+        <span class=p>}</span>
+
+        <span class=k>return</span> <span class=nv>$container</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Gets a new ContainerBuilder instance used to build the service container.</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return ContainerBuilder</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>getContainerBuilder</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=nv>$container</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>ContainerBuilder</span><span class=p>(</span><span class=k>new</span> <span class=nx>ParameterBag</span><span class=p>(</span><span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getKernelParameters</span><span class=p>()));</span>
+
+        <span class=k>if</span> <span class=p>(</span><span class=nb>class_exists</span><span class=p>(</span><span class=s1>&#39;ProxyManager\Configuration&#39;</span><span class=p>))</span> <span class=p>{</span>
+            <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>setProxyInstantiator</span><span class=p>(</span><span class=k>new</span> <span class=nx>RuntimeInstantiator</span><span class=p>());</span>
+        <span class=p>}</span>
+
+        <span class=k>return</span> <span class=nv>$container</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Returns the kernel parameters.</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return array An array of kernel parameters</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>getKernelParameters</span><span class=p>()</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=k>array</span><span class=p>(</span>
+            <span class=s1>&#39;app_dir&#39;</span>   <span class=o>=&gt;</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getAppDir</span><span class=p>(),</span>
+            <span class=s1>&#39;web_dir&#39;</span>   <span class=o>=&gt;</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getWebDir</span><span class=p>(),</span>
+            <span class=s1>&#39;cache_dir&#39;</span> <span class=o>=&gt;</span> <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getCacheDir</span><span class=p>()</span>
+        <span class=p>);</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Prepares the ContainerBuilder before it is compiled.</span>
+<span class=sd>     *</span>
+<span class=sd>     * @param ContainerBuilder $container A ContainerBuilder instance</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>prepareContainer</span><span class=p>(</span><span class=nx>ContainerBuilder</span> <span class=nv>$container</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=nv>$extensions</span> <span class=o>=</span> <span class=k>array</span><span class=p>();</span>
+        <span class=k>foreach</span> <span class=p>(</span><span class=nv>$this</span><span class=o>-&gt;</span><span class=na>registerExtensions</span><span class=p>()</span> <span class=k>as</span> <span class=nv>$extension</span><span class=p>)</span> <span class=p>{</span>
+            <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>registerExtension</span><span class=p>(</span><span class=nv>$extension</span><span class=p>);</span>
+            <span class=nv>$extensions</span><span class=p>[]</span> <span class=o>=</span> <span class=nv>$extension</span><span class=o>-&gt;</span><span class=na>getAlias</span><span class=p>();</span>
+        <span class=p>}</span>
+
+        <span class=k>foreach</span> <span class=p>(</span><span class=nv>$this</span><span class=o>-&gt;</span><span class=na>registerCompilerPasses</span><span class=p>()</span> <span class=k>as</span> <span class=nv>$compiler</span><span class=p>)</span> <span class=p>{</span>
+            <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>addCompilerPass</span><span class=p>(</span><span class=nv>$compiler</span><span class=p>);</span>
+        <span class=p>}</span>
+
+        <span class=c1>// ensure these extensions are implicitly loaded</span>
+        <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>getCompilerPassConfig</span><span class=p>()</span><span class=o>-&gt;</span><span class=na>setMergePass</span><span class=p>(</span><span class=k>new</span> <span class=nx>MergeExtensionConfigurationPass</span><span class=p>(</span><span class=nv>$extensions</span><span class=p>));</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Dumps the service container to PHP code in the cache.</span>
+<span class=sd>     *</span>
+<span class=sd>     * @param ConfigCache      $cache     The config cache</span>
+<span class=sd>     * @param ContainerBuilder $container The service container</span>
+<span class=sd>     * @param string           $class     The name of the class to generate</span>
+<span class=sd>     * @param string           $baseClass The name of the container&#39;s base class</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>dumpContainer</span><span class=p>(</span><span class=nx>ConfigCache</span> <span class=nv>$cache</span><span class=p>,</span> <span class=nx>ContainerBuilder</span> <span class=nv>$container</span><span class=p>,</span> <span class=nv>$class</span><span class=p>,</span> <span class=nv>$baseClass</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=c1>// cache the container</span>
+        <span class=nv>$dumper</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>PhpDumper</span><span class=p>(</span><span class=nv>$container</span><span class=p>);</span>
+
+        <span class=k>if</span> <span class=p>(</span><span class=nb>class_exists</span><span class=p>(</span><span class=s1>&#39;ProxyManager\Configuration&#39;</span><span class=p>))</span> <span class=p>{</span>
+            <span class=nv>$dumper</span><span class=o>-&gt;</span><span class=na>setProxyDumper</span><span class=p>(</span><span class=k>new</span> <span class=nx>ProxyDumper</span><span class=p>());</span>
+        <span class=p>}</span>
+
+        <span class=nv>$content</span> <span class=o>=</span> <span class=nv>$dumper</span><span class=o>-&gt;</span><span class=na>dump</span><span class=p>(</span><span class=k>array</span><span class=p>(</span><span class=s1>&#39;class&#39;</span> <span class=o>=&gt;</span> <span class=nv>$class</span><span class=p>,</span> <span class=s1>&#39;base_class&#39;</span> <span class=o>=&gt;</span> <span class=nv>$baseClass</span><span class=p>));</span>
+        <span class=nv>$cache</span><span class=o>-&gt;</span><span class=na>write</span><span class=p>(</span><span class=nv>$content</span><span class=p>,</span> <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>getResources</span><span class=p>());</span>
+    <span class=p>}</span>
+
+    <span class=sd>/**</span>
+<span class=sd>     * Returns a loader for the container.</span>
+<span class=sd>     *</span>
+<span class=sd>     * @param ContainerInterface $container The service container</span>
+<span class=sd>     *</span>
+<span class=sd>     * @return DelegatingLoader The loader</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>getContainerLoader</span><span class=p>(</span><span class=nx>ContainerInterface</span> <span class=nv>$container</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=nv>$locator</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>FileLocator</span><span class=p>(</span><span class=nv>$this</span><span class=p>);</span>
+        <span class=nv>$resolver</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>LoaderResolver</span><span class=p>(</span><span class=k>array</span><span class=p>(</span>
+            <span class=k>new</span> <span class=nx>XmlFileLoader</span><span class=p>(</span><span class=nv>$container</span><span class=p>,</span> <span class=nv>$locator</span><span class=p>),</span>
+            <span class=k>new</span> <span class=nx>YamlFileLoader</span><span class=p>(</span><span class=nv>$container</span><span class=p>,</span> <span class=nv>$locator</span><span class=p>),</span>
+            <span class=k>new</span> <span class=nx>IniFileLoader</span><span class=p>(</span><span class=nv>$container</span><span class=p>,</span> <span class=nv>$locator</span><span class=p>),</span>
+            <span class=k>new</span> <span class=nx>PhpFileLoader</span><span class=p>(</span><span class=nv>$container</span><span class=p>,</span> <span class=nv>$locator</span><span class=p>),</span>
+            <span class=k>new</span> <span class=nx>ClosureLoader</span><span class=p>(</span><span class=nv>$container</span><span class=p>),</span>
+        <span class=p>));</span>
+
+        <span class=k>return</span> <span class=k>new</span> <span class=nx>DelegatingLoader</span><span class=p>(</span><span class=nv>$resolver</span><span class=p>);</span>
+    <span class=p>}</span>
+<span class=p>}</span></code></pre></div><p>And <code>MergeExtensionConfigurationPass</code>:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+<span class=c1>// file: src/Ellis/Oxid/Bridge/DependencyInjection/MergeExtensionConfigurationPass.php</span>
+
+<span class=k>namespace</span> <span class=nx>Ellis\Oxid\Bridge\DependencyInjection</span><span class=p>;</span>
+
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\Compiler\MergeExtensionConfigurationPass</span> <span class=k>as</span> <span class=nx>BaseMergeExtensionConfigurationPass</span><span class=p>;</span>
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerBuilder</span><span class=p>;</span>
+
+<span class=sd>/**</span>
+<span class=sd> * Ensures certain extensions are always loaded.</span>
+<span class=sd> *</span>
+<span class=sd> * @author Kris Wallsmith &lt;kris@symfony.com&gt;</span>
+<span class=sd> */</span>
+<span class=k>class</span> <span class=nc>MergeExtensionConfigurationPass</span> <span class=k>extends</span> <span class=nx>BaseMergeExtensionConfigurationPass</span>
+<span class=p>{</span>
+    <span class=k>private</span> <span class=nv>$extensions</span><span class=p>;</span>
+
+    <span class=k>public</span> <span class=k>function</span> <span class=nf>__construct</span><span class=p>(</span><span class=k>array</span> <span class=nv>$extensions</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=nv>$this</span><span class=o>-&gt;</span><span class=na>extensions</span> <span class=o>=</span> <span class=nv>$extensions</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=k>public</span> <span class=k>function</span> <span class=nf>process</span><span class=p>(</span><span class=nx>ContainerBuilder</span> <span class=nv>$container</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=k>foreach</span> <span class=p>(</span><span class=nv>$this</span><span class=o>-&gt;</span><span class=na>extensions</span> <span class=k>as</span> <span class=nv>$extension</span><span class=p>)</span> <span class=p>{</span>
+            <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=nb>count</span><span class=p>(</span><span class=nv>$container</span><span class=o>-&gt;</span><span class=na>getExtensionConfig</span><span class=p>(</span><span class=nv>$extension</span><span class=p>)))</span> <span class=p>{</span>
+                <span class=nv>$container</span><span class=o>-&gt;</span><span class=na>loadFromExtension</span><span class=p>(</span><span class=nv>$extension</span><span class=p>,</span> <span class=k>array</span><span class=p>());</span>
+            <span class=p>}</span>
+        <span class=p>}</span>
+
+        <span class=k>parent</span><span class=o>::</span><span class=na>process</span><span class=p>(</span><span class=nv>$container</span><span class=p>);</span>
+    <span class=p>}</span>
+<span class=p>}</span></code></pre></div><p>Great! Now we need to build this Container in OXID so we could use it. We could do this via module but we might want to use Container parameters in <code>config.inc.php</code> so lets create bootstrap file independent from OXID:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+<span class=c1>// file: web/containerbootstrap.php</span>
+
+<span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=nb>class_exists</span><span class=p>(</span><span class=s1>&#39;\Composer\Autoload\ClassLoader&#39;</span><span class=p>))</span> <span class=p>{</span>
+    <span class=k>require_once</span> <span class=nx>__DIR__</span><span class=o>.</span><span class=s1>&#39;/../vendor/autoload.php&#39;</span><span class=p>;</span>
+<span class=p>}</span>
+
+<span class=k>global</span> <span class=nv>$container</span><span class=p>;</span>
+
+<span class=k>if</span> <span class=p>(</span><span class=nv>$container</span> <span class=o>===</span> <span class=k>null</span><span class=p>)</span> <span class=p>{</span>
+    <span class=k>require_once</span> <span class=nx>__DIR__</span><span class=o>.</span><span class=s1>&#39;/../app/ContainerKernel.php&#39;</span><span class=p>;</span>
+    <span class=nv>$debug</span> <span class=o>=</span> <span class=nb>getenv</span><span class=p>(</span><span class=s1>&#39;SYMFONY_DEBUG&#39;</span><span class=p>)</span> <span class=o>!==</span> <span class=s1>&#39;0&#39;</span> <span class=o>&amp;&amp;</span> <span class=nb>getenv</span><span class=p>(</span><span class=s1>&#39;SYMFONY_ENV&#39;</span><span class=p>)</span> <span class=o>!==</span> <span class=s1>&#39;prod&#39;</span><span class=p>;</span>
+    <span class=nv>$kernel</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>ContainerKernel</span><span class=p>(</span><span class=nv>$debug</span><span class=p>);</span>
+    <span class=nv>$container</span> <span class=o>=</span> <span class=nv>$kernel</span><span class=o>-&gt;</span><span class=na>buildContainerFromCache</span><span class=p>();</span>
+<span class=p>}</span></code></pre></div><p>And bootstrap it in <code>bootstrap.php</code>:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+<span class=c1>// file: web/bootstrap.php</span>
+
+<span class=c1>// ...</span>
+
+<span class=c1>// load composer autoloader</span>
+<span class=k>require_once</span> <span class=nx>__DIR__</span> <span class=o>.</span> <span class=s1>&#39;/../vendor/autoload.php&#39;</span><span class=p>;</span>
+
+<span class=c1>// initialize container</span>
+<span class=k>require_once</span> <span class=nx>__DIR__</span> <span class=o>.</span> <span class=s1>&#39;/containerbootstrap.php&#39;</span><span class=p>;</span>
+
+<span class=c1>// ...</span></code></pre></div><p>Ok. Now we have something more to add to our Symfony module. We will create <code>oxUtilsObject</code> extension. So first register this in metadata:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+<span class=c1>// file: web/modules/eli/symfony/metadata.php</span>
+
+<span class=c1>// ...</span>
+
+<span class=nv>$aModule</span> <span class=o>=</span> <span class=k>array</span><span class=p>(</span>
+    <span class=c1>// ...</span>
+    <span class=nx>extend</span> <span class=o>=&gt;</span> <span class=k>array</span><span class=p>(</span>
+        <span class=c1>// ...</span>
+        <span class=s1>&#39;oxutilsobject&#39;</span> <span class=o>=&gt;</span> <span class=s1>&#39;eli/symfony/core/elisymfonyoxutilsobject&#39;</span><span class=p>,</span>
+        <span class=c1>// ...</span>
+    <span class=p>),</span>
+    <span class=c1>// ...</span>
+<span class=p>);</span></code></pre></div><p>And the extension:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+<span class=c1>// file: web/modules/eli/symfony/core/elisymfonyoxutilsobject.php</span>
+
+<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerAwareInterface</span><span class=p>;</span>
+
+<span class=sd>/**</span>
+<span class=sd> * Extension of oxUtilsObject OXID core class</span>
+<span class=sd> *</span>
+<span class=sd> * @see oxUtilsObject</span>
+<span class=sd> */</span>
+<span class=k>class</span> <span class=nc>eliSymfonyOxUtilsObject</span> <span class=k>extends</span> <span class=nx>eliSymfonyOxUtilsObject_parent</span>
+<span class=p>{</span>
+    <span class=sd>/**</span>
+<span class=sd>     * Injects DependencyInjection container on ContainerAwareInterface</span>
+<span class=sd>     * instances.</span>
+<span class=sd>     *</span>
+<span class=sd>     * oxNew() uses this method to build objects, so we are basically</span>
+<span class=sd>     * providing a way of having a container on all OXID objects</span>
+<span class=sd>     * which are ContainerAwareInterface instances.</span>
+<span class=sd>     */</span>
+    <span class=k>protected</span> <span class=k>function</span> <span class=nf>_getObject</span><span class=p>(</span><span class=nv>$sClassName</span><span class=p>,</span> <span class=nv>$iArgCnt</span><span class=p>,</span> <span class=nv>$aParams</span><span class=p>)</span>
+    <span class=p>{</span>
+        <span class=nv>$oObject</span> <span class=o>=</span> <span class=k>parent</span><span class=o>::</span><span class=na>_getObject</span><span class=p>(</span><span class=nv>$sClassName</span><span class=p>,</span> <span class=nv>$iArgCnt</span><span class=p>,</span> <span class=nv>$aParams</span><span class=p>);</span>
+
+        <span class=k>if</span> <span class=p>(</span><span class=nv>$oObject</span> <span class=nx>instanceof</span> <span class=nx>ContainerAwareInterface</span><span class=p>)</span> <span class=p>{</span>
+            <span class=k>global</span> <span class=nv>$container</span><span class=p>;</span>
+            <span class=nv>$oObject</span><span class=o>-&gt;</span><span class=na>setContainer</span><span class=p>(</span><span class=nv>$container</span><span class=p>);</span>
+        <span class=p>}</span>
+
+        <span class=k>return</span> <span class=nv>$oObject</span><span class=p>;</span>
+    <span class=p>}</span>
+<span class=p>}</span></code></pre></div><p>Congratulations! You can now have container injected in any OXID object. How can you benefit from this you might think. You can create components independent from OXID itself, register it as container extension and create a lean modules as bridges to use that in OXID project.</p><h2>Credits</h2><p>Explanation of Dependency Injection in general was highly inspired by Fabien Potencier slides which are available at <a href=http://www.slideshare.net/fabpot/dependency-injection-with-php-and-php-53>slideshare.net</a></p></article><aside class=related><h2>Related Posts</h2><ul class=related-posts><li><h3><a href="/2015/08/04/oxid-symfony-composer/">OXID and Symfony Part 1&#58; Composer <small><time datetime=2015-08-04T00:00:00+03:00>04 Aug 2015</time></small></a></h3></li></ul></aside><div id=disqus_thread></div><script type=text/javascript>
+    var disqus_shortname = 'ellisv';
+    var disqus_identifier = '/2015/08/18/oxid-symfony-dependencyinjection';
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></main><footer class=footer><small>&copy;<time datetime=2015-08-18T21:58:32+03:00>2015</time>. All rights reserved.</small></footer></div></body></html>
