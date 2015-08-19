@@ -4,7 +4,7 @@
  <title>Eligijus Vitkauskas personal blog</title>
  <link href="https://ellisv.github.io/atom.xml" rel="self"/>
  <link href="https://ellisv.github.io/"/>
- <updated>2015-08-18T21:58:32+03:00</updated>
+ <updated>2015-08-19T19:29:41+03:00</updated>
  <id>https://ellisv.github.io</id>
  <author>
    <name>Eligijus Vitkauskas</name>
@@ -17,7 +17,7 @@
    <link href="https://ellisv.github.io/2015/08/18/oxid-symfony-dependencyinjection/"/>
    <updated>2015-08-18T00:00:00+03:00</updated>
    <id>https://ellisv.github.io/2015/08/18/oxid-symfony-dependencyinjection</id>
-   <content type="html">&lt;p&gt;Modern PHP application has lots of objects which are responsible for various things like email sending or data retrieval from database. Chances are great that you may want to have objects inside another one, especially if you follow &lt;a href=&quot;https://en.wikipedia.org/wiki/Single_responsibility_principle&quot;&gt;Single Responsibility Principle&lt;/a&gt;. This part of OXID and Symfony post series will focus on explaining why &lt;a href=&quot;https://en.wikipedia.org/wiki/Dependency_injection&quot;&gt;Dependency Injection&lt;/a&gt; and showing how to have &lt;a href=&quot;http://symfony.com/doc/current/components/dependency_injection/introduction.html&quot;&gt;Symfony DependencyInjection&lt;/a&gt; component in OXID eShop.&lt;/p&gt;
+   <content type="html">&lt;p&gt;Modern PHP application has lots of objects which are responsible for various things like email sending or data retrieval from database. Chances are great that you may want to have objects inside inside other objects, especially if you follow &lt;a href=&quot;https://en.wikipedia.org/wiki/Single_responsibility_principle&quot;&gt;Single Responsibility Principle&lt;/a&gt;. This part of OXID and Symfony post series will focus on explaining why to use &lt;a href=&quot;https://en.wikipedia.org/wiki/Dependency_injection&quot;&gt;Dependency Injection&lt;/a&gt; and showing how to have &lt;a href=&quot;http://symfony.com/doc/current/components/dependency_injection/introduction.html&quot;&gt;Symfony DependencyInjection&lt;/a&gt; component in OXID eShop.&lt;/p&gt;
 
 &lt;p&gt;I believe learning by example is the best way to learn, so lets discuss a case for WeatherService which:&lt;/p&gt;
 
@@ -47,12 +47,12 @@
 
     &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getWeatherForLocation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Location&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$location&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;client&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;static&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;URL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;httpClient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;static&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;URL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
             &lt;span class=&quot;s1&quot;&gt;&amp;#39;longitude&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$location&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getLongitude&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
             &lt;span class=&quot;s1&quot;&gt;&amp;#39;latitude&amp;#39;&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$location&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getLatitude&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
         &lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
 
-        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;parse&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;parseWeather&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;parser&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;parseWeather&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 
@@ -60,7 +60,7 @@
 
 &lt;p&gt;DO NOT rush to facepalm just yet. First we are going to do this a wrong way so we would know a reason why it shouldn&amp;rsquo;t be that way.&lt;/p&gt;
 
-&lt;p&gt;It is easy to create objects if you do it like in the example above but it is really hard to configure objects that this service depends on. What if &lt;code&gt;HttpClient&lt;/code&gt; and &lt;code&gt;YahooDataParser&lt;/code&gt; requires some parameters while constructing them. Everything would be hard coded into &lt;code&gt;YahooWeatherService&lt;/code&gt; class. Also, every new instance of &lt;code&gt;YahooWeatherService&lt;/code&gt; would create new instances for classes that it depends on (yes, &lt;code&gt;YahooWeatherService&lt;/code&gt; is not that good of an example for this point, but &lt;code&gt;Product&lt;/code&gt; class would me). We could solve this problem by using &lt;a href=&quot;https://github.com/domnikl/DesignPatternsPHP/tree/master/Structural/Registry&quot;&gt;registries&lt;/a&gt;:&lt;/p&gt;
+&lt;p&gt;It is easy to create objects if you do it like in the example above but it is really hard to configure objects that this service depends on. What if &lt;code&gt;HttpClient&lt;/code&gt; and &lt;code&gt;YahooDataParser&lt;/code&gt; requires some parameters while constructing them. Everything would be hard coded into &lt;code&gt;YahooWeatherService&lt;/code&gt; class. Also, every new instance of &lt;code&gt;YahooWeatherService&lt;/code&gt; would create new instances for classes that it depends on (yes, &lt;code&gt;YahooWeatherService&lt;/code&gt; is not that good of an example for this point, but &lt;code&gt;Product&lt;/code&gt; class would be). We could solve this problem by using &lt;a href=&quot;https://github.com/domnikl/DesignPatternsPHP/tree/master/Structural/Registry&quot;&gt;registries&lt;/a&gt;:&lt;/p&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
 
@@ -105,7 +105,7 @@
 
 &lt;h2&gt;Object container&lt;/h2&gt;
 
-&lt;p&gt;Object container is an object which is aware of other objects and their dependencies which are created on demand. Other object must know now that they are being controlled by object container. Lets create very primitive object container:&lt;/p&gt;
+&lt;p&gt;Object container is an object which is aware of other objects and their dependencies which are created on demand. Other objects must not know that they are being controlled by object container. Lets create very primitive object container:&lt;/p&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
 
@@ -665,7 +665,7 @@
 
 &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Ok. Now we have something more to add to our Symfony module. We will create &lt;code&gt;oxUtilsObject&lt;/code&gt; extension. So first register this in metadata:&lt;/p&gt;
+&lt;p&gt;Ok. Now we have something to add to our Symfony module. We will create &lt;code&gt;oxUtilsObject&lt;/code&gt; extension. So first register this in metadata:&lt;/p&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;// file: web/modules/eli/symfony/metadata.php&lt;/span&gt;
