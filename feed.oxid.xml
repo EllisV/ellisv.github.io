@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Eligijus Vitkauskas personal blog - OXID</title>
+    <description>Posts categorized as 'oxid'</description>
+    <link>https://ellisv.github.io</link>
+    <atom:link href="https://ellisv.github.io/feed.oxid.xml" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>OXID and Symfony Part 3&amp;#58; HttpKernel</title>
+        
+          <description>&lt;p&gt;&lt;a href=&quot;http://symfony.com/doc/current/components/http_kernel/introduction.html&quot;&gt;Symfony HttpKernel&lt;/a&gt; component provides us with tools for handling HTTP requests and
+returning a responses. But we will stick to default OXID eShop HTTP requests processing as
+it is really challenging to do without loosing backwards compatibility. However, Symfony
+HttpKernel component is closely associated with Symfony Bundle term.&lt;/p&gt;
+
+&lt;p&gt;Often Symfony Bundle is directly associated with full Symfony framework, but it is not
+exactly true. Symfony Bundle in most cases is used as a package in which we register
+Symfony DependencyInjection container extension. We want to be able to have Symfony
+Bundles in our OXID eShop project so we could use packages that Symfony community has
+created.&lt;/p&gt;
+</description>
+        
+        <pubDate>Thu, 20 Aug 2015 00:00:00 +0300</pubDate>
+        <link>https://ellisv.github.io/2015/08/20/oxid-symfony-httpkernel/</link>
+        <guid isPermaLink="true">https://ellisv.github.io/2015/08/20/oxid-symfony-httpkernel/</guid>
+      </item>
+    
+      <item>
+        <title>OXID and Symfony Part 2&amp;#58; DependencyInjection</title>
+        
+          <description>&lt;p&gt;Modern PHP application has lots of objects which are responsible for various things like email sending or data retrieval from database. Chances are great that you may want to have objects inside inside other objects, especially if you follow &lt;a href=&quot;https://en.wikipedia.org/wiki/Single_responsibility_principle&quot;&gt;Single Responsibility Principle&lt;/a&gt;. This part of OXID and Symfony post series will focus on explaining why to use &lt;a href=&quot;https://en.wikipedia.org/wiki/Dependency_injection&quot;&gt;Dependency Injection&lt;/a&gt; and showing how to have &lt;a href=&quot;http://symfony.com/doc/current/components/dependency_injection/introduction.html&quot;&gt;Symfony DependencyInjection&lt;/a&gt; component in OXID eShop.&lt;/p&gt;
+
+&lt;p&gt;I believe learning by example is the best way to learn, so lets discuss a case for WeatherService which:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Is able to retrieve Weather object on passing a Location object;&lt;/li&gt;
+&lt;li&gt;Uses HTTP Client for fetching weather from weather provider;&lt;/li&gt;
+&lt;li&gt;Has a parser that transforms HTTP response into Weather object.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        
+        <pubDate>Tue, 18 Aug 2015 00:00:00 +0300</pubDate>
+        <link>https://ellisv.github.io/2015/08/18/oxid-symfony-dependencyinjection/</link>
+        <guid isPermaLink="true">https://ellisv.github.io/2015/08/18/oxid-symfony-dependencyinjection/</guid>
+      </item>
+    
+      <item>
+        <title>OXID and Symfony Part 1&amp;#58; Composer</title>
+        
+          <description>&lt;p&gt;Everyone who has been developing e-commerce projects with OXID eShop knows the routine when they have to integrate third-party libraries within their modules. It&amp;rsquo;s registering all files in module metadata or worse - requiring them directly. It has been always the case in PHP world because every framework had their own autoloading algorithms until &lt;a href=&quot;http://www.php-fig.org/psr/psr-0/&quot;&gt;PSR-0&lt;/a&gt; and later &lt;a href=&quot;http://www.php-fig.org/psr/psr-4/&quot;&gt;PSR-4&lt;/a&gt; came out.&lt;/p&gt;
+
+&lt;p&gt;OXID eShop still does not have a support for PSR-4 way of autoloading. In this part of OXID and Symfony series we are looking on the ways of having PSR-0 and PSR-4 support in OXID eShop without breaking backwards compatibility.&lt;/p&gt;
+</description>
+        
+        <pubDate>Tue, 04 Aug 2015 00:00:00 +0300</pubDate>
+        <link>https://ellisv.github.io/2015/08/04/oxid-symfony-composer/</link>
+        <guid isPermaLink="true">https://ellisv.github.io/2015/08/04/oxid-symfony-composer/</guid>
+      </item>
+    
+  </channel>
+</rss>
