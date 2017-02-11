@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
  <title>Eligijus Vitkauskas personal blog</title>
- <link href="https://ellisv.github.io/atom.xml" rel="self"/>
- <link href="https://ellisv.github.io/"/>
- <updated>2015-08-25T21:16:51+03:00</updated>
- <id>https://ellisv.github.io</id>
+ <link href="http://localhost:3000/atom.xml" rel="self"/>
+ <link href="http://localhost:3000/"/>
+ <updated>2017-02-12T01:19:17+02:00</updated>
+ <id>http://localhost:3000</id>
  <author>
    <name>Eligijus Vitkauskas</name>
    <email>eligijusvitkauskas@gmail.com</email>
@@ -13,10 +13,18 @@
 
  
  <entry>
+   <title>A story about overengineered production setup</title>
+   <link href="http://localhost:3000/2017/02/11/overengineered-production-setup/"/>
+   <updated>2017-02-11T21:06:13+02:00</updated>
+   <id>http://localhost:3000/2017/02/11/overengineered-production-setup</id>
+   <content type="html"></content>
+ </entry>
+ 
+ <entry>
    <title>OXID and Symfony Part 3&#58; HttpKernel</title>
-   <link href="https://ellisv.github.io/2015/08/20/oxid-symfony-httpkernel/"/>
+   <link href="http://localhost:3000/2015/08/20/oxid-symfony-httpkernel/"/>
    <updated>2015-08-20T00:00:00+03:00</updated>
-   <id>https://ellisv.github.io/2015/08/20/oxid-symfony-httpkernel</id>
+   <id>http://localhost:3000/2015/08/20/oxid-symfony-httpkernel</id>
    <content type="html">&lt;p&gt;&lt;a href=&quot;http://symfony.com/doc/current/components/http_kernel/introduction.html&quot;&gt;Symfony HttpKernel&lt;/a&gt; component provides us with tools for handling HTTP requests and
 returning a responses. But we will stick to default OXID eShop HTTP requests processing as
 it is really challenging to do without loosing backwards compatibility. However, Symfony
@@ -187,9 +195,9 @@ before I had a talk on knowledge exchange between OXID Core and OXID Professiona
  
  <entry>
    <title>OXID and Symfony Part 2&#58; DependencyInjection</title>
-   <link href="https://ellisv.github.io/2015/08/18/oxid-symfony-dependencyinjection/"/>
+   <link href="http://localhost:3000/2015/08/18/oxid-symfony-dependencyinjection/"/>
    <updated>2015-08-18T00:00:00+03:00</updated>
-   <id>https://ellisv.github.io/2015/08/18/oxid-symfony-dependencyinjection</id>
+   <id>http://localhost:3000/2015/08/18/oxid-symfony-dependencyinjection</id>
    <content type="html">&lt;p&gt;Modern PHP application has lots of objects which are responsible for various things like email sending or data retrieval from database. Chances are great that you may want to have objects inside inside other objects, especially if you follow &lt;a href=&quot;https://en.wikipedia.org/wiki/Single_responsibility_principle&quot;&gt;Single Responsibility Principle&lt;/a&gt;. This part of OXID and Symfony post series will focus on explaining why to use &lt;a href=&quot;https://en.wikipedia.org/wiki/Dependency_injection&quot;&gt;Dependency Injection&lt;/a&gt; and showing how to have &lt;a href=&quot;http://symfony.com/doc/current/components/dependency_injection/introduction.html&quot;&gt;Symfony DependencyInjection&lt;/a&gt; component in OXID eShop.&lt;/p&gt;
 
 &lt;p&gt;I believe learning by example is the best way to learn, so lets discuss a case for WeatherService which:&lt;/p&gt;
@@ -900,9 +908,9 @@ before I had a talk on knowledge exchange between OXID Core and OXID Professiona
  
  <entry>
    <title>OXID and Symfony Part 1&#58; Composer</title>
-   <link href="https://ellisv.github.io/2015/08/04/oxid-symfony-composer/"/>
+   <link href="http://localhost:3000/2015/08/04/oxid-symfony-composer/"/>
    <updated>2015-08-04T00:00:00+03:00</updated>
-   <id>https://ellisv.github.io/2015/08/04/oxid-symfony-composer</id>
+   <id>http://localhost:3000/2015/08/04/oxid-symfony-composer</id>
    <content type="html">&lt;p&gt;Everyone who has been developing e-commerce projects with OXID eShop knows the routine when they have to integrate third-party libraries within their modules. It&amp;rsquo;s registering all files in module metadata or worse - requiring them directly. It has been always the case in PHP world because every framework had their own autoloading algorithms until &lt;a href=&quot;http://www.php-fig.org/psr/psr-0/&quot;&gt;PSR-0&lt;/a&gt; and later &lt;a href=&quot;http://www.php-fig.org/psr/psr-4/&quot;&gt;PSR-4&lt;/a&gt; came out.&lt;/p&gt;
 
 &lt;p&gt;OXID eShop still does not have a support for PSR-4 way of autoloading. In this part of OXID and Symfony series we are looking on the ways of having PSR-0 and PSR-4 support in OXID eShop without breaking backwards compatibility.&lt;/p&gt;

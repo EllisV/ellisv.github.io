@@ -1,7 +1,56 @@
-<!doctype html><html lang=en><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="ie=edge"><meta name=description content="Eligijus Vitkauskas personal blog"><meta name=author content="Eligijus Vitkauskas"><meta name=viewport content="width=device-width, initial-scale=1"><title>OXID and Symfony Part 3&#58; HttpKernel - Eligijus Vitkauskas personal blog</title><link rel=apple-touch-icon href=/apple-touch-icon.png><link rel=icon href=/favicon.ico><link rel=stylesheet href=/css/app.css><!--[if lt IE 9]>
- <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
- <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
- <![endif]--><link rel=alternate type=application/rss+xml title=RSS href=/atom.xml><link type=text/plain rel=author href=/humans.txt></head><body><div class="container content"><header class=masthead><h3 class=masthead-title><a href="/" title=Home>Ellis</a> <small>about OXID</small></h3></header><main><article class=post><h1 class=post-title>OXID and Symfony Part 3&#58; HttpKernel</h1><time datetime=2015-08-20T00:00:00+03:00 class=post-date>20 Aug 2015</time><p><a href=http://symfony.com/doc/current/components/http_kernel/introduction.html>Symfony HttpKernel</a> component provides us with tools for handling HTTP requests and returning a responses. But we will stick to default OXID eShop HTTP requests processing as it is really challenging to do without loosing backwards compatibility. However, Symfony HttpKernel component is closely associated with Symfony Bundle term.</p><p>Often Symfony Bundle is directly associated with full Symfony framework, but it is not exactly true. Symfony Bundle in most cases is used as a package in which we register Symfony DependencyInjection container extension. We want to be able to have Symfony Bundles in our OXID eShop project so we could use packages that Symfony community has created.</p><p>We install Symfony HttpKernel via Composer. Our project structure looks like so:</p><div class=highlight><pre><code class=language-text data-lang=text>|_ app/
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="description" content="Eligijus Vitkauskas personal blog">
+  <meta name="author" content="Eligijus Vitkauskas">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>OXID and Symfony Part 3&#58; HttpKernel - Eligijus Vitkauskas personal blog</title>
+
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" href="/favicon.ico">
+
+  <link rel="stylesheet" href="/css/app.css">
+
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+  <link type="text/plain" rel="author" href="/humans.txt" />
+</head>
+
+<body>
+  <div class="container content">
+    <header class="masthead">
+  <h3 class="masthead-title">
+    <a href="/" title="Home">Ellis</a>
+    <small>personal blog</small>
+  </h3>
+</header>
+
+
+    <main><article class="post">
+  <h1 class="post-title">OXID and Symfony Part 3&#58; HttpKernel</h1>
+  <time datetime="2015-08-20T00:00:00+03:00" class="post-date">20 Aug 2015</time>
+  <p><a href="http://symfony.com/doc/current/components/http_kernel/introduction.html">Symfony HttpKernel</a> component provides us with tools for handling HTTP requests and
+returning a responses. But we will stick to default OXID eShop HTTP requests processing as
+it is really challenging to do without loosing backwards compatibility. However, Symfony
+HttpKernel component is closely associated with Symfony Bundle term.</p>
+
+<p>Often Symfony Bundle is directly associated with full Symfony framework, but it is not
+exactly true. Symfony Bundle in most cases is used as a package in which we register
+Symfony DependencyInjection container extension. We want to be able to have Symfony
+Bundles in our OXID eShop project so we could use packages that Symfony community has
+created.</p>
+
+<!--more-->
+
+<p>We install Symfony HttpKernel via Composer. Our project structure looks like so:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">|_ app/
 |  |_ cache/
 |  |  |_ ...
 |  |
@@ -26,98 +75,173 @@
 |
 |_ composer.json
 |_ ...
-</code></pre></div><p><code>AppKernel.php</code> is a file responsible for registering Symfony Bundles and loading configuration. This is an example of <code>AppKernel.php</code> file:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
+</code></pre></div>
+<p><code>AppKernel.php</code> is a file responsible for registering Symfony Bundles and loading configuration.
+This is an example of <code>AppKernel.php</code> file:</p>
 
-<span class=k>use</span> <span class=nx>Symfony\Component\HttpKernel\Kernel</span><span class=p>;</span>
-<span class=k>use</span> <span class=nx>Symfony\Component\Config\Loader\LoaderInterface</span><span class=p>;</span>
+<div class="highlight"><pre><code class="language-php" data-lang="php"><span class="cp">&lt;?php</span>
 
-<span class=k>class</span> <span class=nc>AppKernel</span> <span class=k>extends</span> <span class=nx>Kernel</span>
-<span class=p>{</span>
-    <span class=k>public</span> <span class=k>function</span> <span class=nf>registerBundles</span><span class=p>()</span>
-    <span class=p>{</span>
-        <span class=k>return</span> <span class=p>[</span>
-            <span class=k>new</span> <span class=nx>Ellis\Oxid\Bundle\FrameworkBundle\FrameworkBundle</span><span class=p>,</span>
-            <span class=k>new</span> <span class=nx>Symfony\Bundle\MonologBundle\MonologBundle</span>
-        <span class=p>];</span>
-    <span class=p>}</span>
+<span class="k">use</span> <span class="nx">Symfony\Component\HttpKernel\Kernel</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Symfony\Component\Config\Loader\LoaderInterface</span><span class="p">;</span>
 
-    <span class=k>public</span> <span class=k>function</span> <span class=nf>registerContainerConfiguration</span><span class=p>(</span><span class=nx>LoaderInterface</span> <span class=nv>$loader</span><span class=p>)</span>
-    <span class=p>{</span>
-        <span class=nv>$loader</span><span class=o>-&gt;</span><span class=na>load</span><span class=p>(</span><span class=nx>__DIR__</span><span class=o>.</span><span class=s1>&#39;/config/config_&#39;</span><span class=o>.</span><span class=nv>$this</span><span class=o>-&gt;</span><span class=na>getEnvironment</span><span class=p>()</span><span class=o>.</span><span class=s1>&#39;.yml&#39;</span><span class=p>);</span>
-    <span class=p>}</span>
-<span class=p>}</span></code></pre></div><p>Building DependencyInjection Container is a responsibility of HttpKernel component. But we need to adjust OXID to be able to use this container.</p><p>There are more than one way do this. Please read <a href="/2015/08/18/oxid-symfony-dependencyinjection/">Part 2</a> of this blog post series for explanation on why we chose to go this way. So we create <code>kernelbootstrap.php</code> file:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
-<span class=c1>// file: web/kernelbootstrap.php</span>
+<span class="k">class</span> <span class="nc">AppKernel</span> <span class="k">extends</span> <span class="nx">Kernel</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">registerBundles</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="k">new</span> <span class="nx">Ellis\Oxid\Bundle\FrameworkBundle\FrameworkBundle</span><span class="p">,</span>
+            <span class="k">new</span> <span class="nx">Symfony\Bundle\MonologBundle\MonologBundle</span>
+        <span class="p">];</span>
+    <span class="p">}</span>
 
-<span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=nb>class_exists</span><span class=p>(</span><span class=s1>&#39;\Composer\Autoload\ClassLoader&#39;</span><span class=p>))</span> <span class=p>{</span>
-    <span class=k>require_once</span> <span class=nx>__DIR__</span><span class=o>.</span><span class=s1>&#39;/../vendor/autoload.php&#39;</span><span class=p>;</span>
-<span class=p>}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">registerContainerConfiguration</span><span class="p">(</span><span class="nx">LoaderInterface</span> <span class="nv">$loader</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nv">$loader</span><span class="o">-&gt;</span><span class="na">load</span><span class="p">(</span><span class="nx">__DIR__</span><span class="o">.</span><span class="s1">&#39;/config/config_&#39;</span><span class="o">.</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getEnvironment</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39;.yml&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
 
-<span class=k>global</span> <span class=nv>$kernel</span><span class=p>;</span>
+<p>Building DependencyInjection Container is a responsibility of HttpKernel component. But we need
+to adjust OXID to be able to use this container.</p>
 
-<span class=k>if</span> <span class=p>(</span><span class=nv>$kernel</span> <span class=o>===</span> <span class=k>null</span><span class=p>)</span> <span class=p>{</span>
-    <span class=k>require_once</span> <span class=nx>__DIR__</span><span class=o>.</span><span class=s1>&#39;/../app/AppKernel.php&#39;</span><span class=p>;</span>
+<p>There are more than one way do this. Please read <a href="/2015/08/18/oxid-symfony-dependencyinjection/">Part 2</a>
+of this blog post series for explanation on why we chose to go this way. So we create <code>kernelbootstrap.php</code> file:</p>
 
-    <span class=nv>$env</span> <span class=o>=</span> <span class=nb>getenv</span><span class=p>(</span><span class=s1>&#39;SYMFONY_ENV&#39;</span><span class=p>)</span> <span class=o>?:</span> <span class=s1>&#39;prod&#39;</span><span class=p>;</span>
-    <span class=nv>$debug</span> <span class=o>=</span> <span class=nb>getenv</span><span class=p>(</span><span class=s1>&#39;SYMFONY_DEBUG&#39;</span><span class=p>)</span> <span class=o>!==</span> <span class=s1>&#39;0&#39;</span> <span class=o>&amp;&amp;</span> <span class=nv>$env</span> <span class=o>!==</span> <span class=s1>&#39;prod&#39;</span><span class=p>;</span>
+<div class="highlight"><pre><code class="language-php" data-lang="php"><span class="cp">&lt;?php</span>
+<span class="c1">// file: web/kernelbootstrap.php</span>
 
-    <span class=nv>$kernel</span> <span class=o>=</span> <span class=k>new</span> <span class=nx>AppKernel</span><span class=p>(</span><span class=nv>$env</span><span class=p>,</span> <span class=nv>$debug</span><span class=p>);</span>
-    <span class=nv>$kernel</span><span class=o>-&gt;</span><span class=na>boot</span><span class=p>();</span>
-<span class=p>}</span></code></pre></div><p>And bootstrap it in <code>bootstrap.php</code>:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
-<span class=c1>// file: web/bootstrap.php</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">class_exists</span><span class="p">(</span><span class="s1">&#39;\Composer\Autoload\ClassLoader&#39;</span><span class="p">))</span> <span class="p">{</span>
+    <span class="k">require_once</span> <span class="nx">__DIR__</span><span class="o">.</span><span class="s1">&#39;/../vendor/autoload.php&#39;</span><span class="p">;</span>
+<span class="p">}</span>
 
-<span class=c1>// ...</span>
+<span class="k">global</span> <span class="nv">$kernel</span><span class="p">;</span>
 
-<span class=c1>// load composer autoloader</span>
-<span class=k>require_once</span> <span class=nx>__DIR__</span> <span class=o>.</span> <span class=s1>&#39;/../vendor/autoload.php&#39;</span><span class=p>;</span>
+<span class="k">if</span> <span class="p">(</span><span class="nv">$kernel</span> <span class="o">===</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">require_once</span> <span class="nx">__DIR__</span><span class="o">.</span><span class="s1">&#39;/../app/AppKernel.php&#39;</span><span class="p">;</span>
 
-<span class=c1>// initialize kernel</span>
-<span class=k>require_once</span> <span class=nx>__DIR__</span> <span class=o>.</span> <span class=s1>&#39;/kernelbootstrap.php&#39;</span><span class=p>;</span>
+    <span class="nv">$env</span> <span class="o">=</span> <span class="nb">getenv</span><span class="p">(</span><span class="s1">&#39;SYMFONY_ENV&#39;</span><span class="p">)</span> <span class="o">?:</span> <span class="s1">&#39;prod&#39;</span><span class="p">;</span>
+    <span class="nv">$debug</span> <span class="o">=</span> <span class="nb">getenv</span><span class="p">(</span><span class="s1">&#39;SYMFONY_DEBUG&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="s1">&#39;0&#39;</span> <span class="o">&amp;&amp;</span> <span class="nv">$env</span> <span class="o">!==</span> <span class="s1">&#39;prod&#39;</span><span class="p">;</span>
 
-<span class=c1>// ...</span></code></pre></div><p>Ok. Now we have something to add to our Symfony module. We will create <code>oxUtilsObject</code> extension (or edit if you have not deleted it from Part 2). So first register this in metadata:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
-<span class=c1>// file: web/modules/eli/symfony/metadata.php</span>
+    <span class="nv">$kernel</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AppKernel</span><span class="p">(</span><span class="nv">$env</span><span class="p">,</span> <span class="nv">$debug</span><span class="p">);</span>
+    <span class="nv">$kernel</span><span class="o">-&gt;</span><span class="na">boot</span><span class="p">();</span>
+<span class="p">}</span></code></pre></div>
 
-<span class=c1>// ...</span>
+<p>And bootstrap it in <code>bootstrap.php</code>:</p>
 
-<span class=nv>$aModule</span> <span class=o>=</span> <span class=k>array</span><span class=p>(</span>
-    <span class=c1>// ...</span>
-    <span class=nx>extend</span> <span class=o>=&gt;</span> <span class=k>array</span><span class=p>(</span>
-        <span class=c1>// ...</span>
-        <span class=s1>&#39;oxutilsobject&#39;</span> <span class=o>=&gt;</span> <span class=s1>&#39;eli/symfony/core/elisymfonyoxutilsobject&#39;</span><span class=p>,</span>
-        <span class=c1>// ...</span>
-    <span class=p>),</span>
-    <span class=c1>// ...</span>
-<span class=p>);</span></code></pre></div><p>And the extension:</p><div class=highlight><pre><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
-<span class=c1>// file: web/modules/eli/symfony/core/elisymfonyoxutilsobject.php</span>
+<div class="highlight"><pre><code class="language-php" data-lang="php"><span class="cp">&lt;?php</span>
+<span class="c1">// file: web/bootstrap.php</span>
 
-<span class=k>use</span> <span class=nx>Symfony\Component\DependencyInjection\ContainerAwareInterface</span><span class=p>;</span>
+<span class="c1">// ...</span>
 
-<span class=sd>/**</span>
-<span class=sd> * Extension of oxUtilsObject OXID core class</span>
-<span class=sd> *</span>
-<span class=sd> * @see oxUtilsObject</span>
-<span class=sd> */</span>
-<span class=k>class</span> <span class=nc>eliSymfonyOxUtilsObject</span> <span class=k>extends</span> <span class=nx>eliSymfonyOxUtilsObject_parent</span>
-<span class=p>{</span>
-    <span class=sd>/**</span>
-<span class=sd>     * Injects DependencyInjection container on ContainerAwareInterface</span>
-<span class=sd>     * instances.</span>
-<span class=sd>     *</span>
-<span class=sd>     * oxNew() uses this method to build objects, so we are basically</span>
-<span class=sd>     * providing a way of having a container on all OXID objects</span>
-<span class=sd>     * which are ContainerAwareInterface instances.</span>
-<span class=sd>     */</span>
-    <span class=k>protected</span> <span class=k>function</span> <span class=nf>_getObject</span><span class=p>(</span><span class=nv>$sClassName</span><span class=p>,</span> <span class=nv>$iArgCnt</span><span class=p>,</span> <span class=nv>$aParams</span><span class=p>)</span>
-    <span class=p>{</span>
-        <span class=nv>$oObject</span> <span class=o>=</span> <span class=k>parent</span><span class=o>::</span><span class=na>_getObject</span><span class=p>(</span><span class=nv>$sClassName</span><span class=p>,</span> <span class=nv>$iArgCnt</span><span class=p>,</span> <span class=nv>$aParams</span><span class=p>);</span>
+<span class="c1">// load composer autoloader</span>
+<span class="k">require_once</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/../vendor/autoload.php&#39;</span><span class="p">;</span>
 
-        <span class=k>if</span> <span class=p>(</span><span class=nv>$oObject</span> <span class=nx>instanceof</span> <span class=nx>ContainerAwareInterface</span><span class=p>)</span> <span class=p>{</span>
-            <span class=k>global</span> <span class=nv>$kernel</span><span class=p>;</span>
-            <span class=nv>$oObject</span><span class=o>-&gt;</span><span class=na>setContainer</span><span class=p>(</span><span class=nv>$kernel</span><span class=o>-&gt;</span><span class=na>getContainer</span><span class=p>());</span>
-        <span class=p>}</span>
+<span class="c1">// initialize kernel</span>
+<span class="k">require_once</span> <span class="nx">__DIR__</span> <span class="o">.</span> <span class="s1">&#39;/kernelbootstrap.php&#39;</span><span class="p">;</span>
 
-        <span class=k>return</span> <span class=nv>$oObject</span><span class=p>;</span>
-    <span class=p>}</span>
-<span class=p>}</span></code></pre></div><p>You are now able to register Symfony Bundles and use them in your OXID project. In example below we have registered MonologBundle, so we can get this logger by requesting <code>$container-&gt;get(&#39;logger&#39;)</code>.</p><p>There is a dedicated open source project which contains this implemention. You can see the source at <a href=https://github.com/EllisV/oxid-standard>github.com/EllisV/oxid-standard</a>.</p><p>By the way, I am really sorry that I was not really descriptive in this blog post. I wanted to finish this post before I had a talk on knowledge exchange between OXID Core and OXID Professional Services teams.</p></article><aside class=related><h2>Related Posts</h2><ul class=related-posts><li><h3><a href="/2015/08/18/oxid-symfony-dependencyinjection/">OXID and Symfony Part 2&#58; DependencyInjection <small><time datetime=2015-08-18T00:00:00+03:00>18 Aug 2015</time></small></a></h3></li><li><h3><a href="/2015/08/04/oxid-symfony-composer/">OXID and Symfony Part 1&#58; Composer <small><time datetime=2015-08-04T00:00:00+03:00>04 Aug 2015</time></small></a></h3></li></ul></aside><div id=disqus_thread></div><script type=text/javascript>
+<span class="c1">// ...</span></code></pre></div>
+
+<p>Ok. Now we have something to add to our Symfony module. We will create <code>oxUtilsObject</code> extension (or edit if you have
+not deleted it from Part 2). So first register this in metadata:</p>
+
+<div class="highlight"><pre><code class="language-php" data-lang="php"><span class="cp">&lt;?php</span>
+<span class="c1">// file: web/modules/eli/symfony/metadata.php</span>
+
+<span class="c1">// ...</span>
+
+<span class="nv">$aModule</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+    <span class="c1">// ...</span>
+    <span class="nx">extend</span> <span class="o">=&gt;</span> <span class="k">array</span><span class="p">(</span>
+        <span class="c1">// ...</span>
+        <span class="s1">&#39;oxutilsobject&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;eli/symfony/core/elisymfonyoxutilsobject&#39;</span><span class="p">,</span>
+        <span class="c1">// ...</span>
+    <span class="p">),</span>
+    <span class="c1">// ...</span>
+<span class="p">);</span></code></pre></div>
+
+<p>And the extension:</p>
+
+<div class="highlight"><pre><code class="language-php" data-lang="php"><span class="cp">&lt;?php</span>
+<span class="c1">// file: web/modules/eli/symfony/core/elisymfonyoxutilsobject.php</span>
+
+<span class="k">use</span> <span class="nx">Symfony\Component\DependencyInjection\ContainerAwareInterface</span><span class="p">;</span>
+
+<span class="sd">/**</span>
+<span class="sd"> * Extension of oxUtilsObject OXID core class</span>
+<span class="sd"> *</span>
+<span class="sd"> * @see oxUtilsObject</span>
+<span class="sd"> */</span>
+<span class="k">class</span> <span class="nc">eliSymfonyOxUtilsObject</span> <span class="k">extends</span> <span class="nx">eliSymfonyOxUtilsObject_parent</span>
+<span class="p">{</span>
+    <span class="sd">/**</span>
+<span class="sd">     * Injects DependencyInjection container on ContainerAwareInterface</span>
+<span class="sd">     * instances.</span>
+<span class="sd">     *</span>
+<span class="sd">     * oxNew() uses this method to build objects, so we are basically</span>
+<span class="sd">     * providing a way of having a container on all OXID objects</span>
+<span class="sd">     * which are ContainerAwareInterface instances.</span>
+<span class="sd">     */</span>
+    <span class="k">protected</span> <span class="k">function</span> <span class="nf">_getObject</span><span class="p">(</span><span class="nv">$sClassName</span><span class="p">,</span> <span class="nv">$iArgCnt</span><span class="p">,</span> <span class="nv">$aParams</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nv">$oObject</span> <span class="o">=</span> <span class="k">parent</span><span class="o">::</span><span class="na">_getObject</span><span class="p">(</span><span class="nv">$sClassName</span><span class="p">,</span> <span class="nv">$iArgCnt</span><span class="p">,</span> <span class="nv">$aParams</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nv">$oObject</span> <span class="nx">instanceof</span> <span class="nx">ContainerAwareInterface</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">global</span> <span class="nv">$kernel</span><span class="p">;</span>
+            <span class="nv">$oObject</span><span class="o">-&gt;</span><span class="na">setContainer</span><span class="p">(</span><span class="nv">$kernel</span><span class="o">-&gt;</span><span class="na">getContainer</span><span class="p">());</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nv">$oObject</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+
+<p>You are now able to register Symfony Bundles and use them in your OXID project. In example below we have registered
+MonologBundle, so we can get this logger by requesting <code>$container-&gt;get(&#39;logger&#39;)</code>.</p>
+
+<p>There is a dedicated open source project which contains this implemention. You can see the source at
+<a href="https://github.com/EllisV/oxid-standard">github.com/EllisV/oxid-standard</a>.</p>
+
+<p>By the way, I am really sorry that I was not really descriptive in this blog post. I wanted to finish this post
+before I had a talk on knowledge exchange between OXID Core and OXID Professional Services teams.</p>
+
+</article>
+
+
+  <aside class="related">
+    <h2>Related Posts</h2>
+    <ul class="related-posts">
+      
+        <li>
+          <h3>
+            <a href="/2017/02/11/overengineered-production-setup/">
+              A story about overengineered production setup
+              <small><time datetime="2017-02-11T21:06:13+02:00">11 Feb 2017</time></small>
+            </a>
+          </h3>
+        </li>
+      
+        <li>
+          <h3>
+            <a href="/2015/08/18/oxid-symfony-dependencyinjection/">
+              OXID and Symfony Part 2&#58; DependencyInjection
+              <small><time datetime="2015-08-18T00:00:00+03:00">18 Aug 2015</time></small>
+            </a>
+          </h3>
+        </li>
+      
+        <li>
+          <h3>
+            <a href="/2015/08/04/oxid-symfony-composer/">
+              OXID and Symfony Part 1&#58; Composer
+              <small><time datetime="2015-08-04T00:00:00+03:00">04 Aug 2015</time></small>
+            </a>
+          </h3>
+        </li>
+      
+    </ul>
+  </aside>
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
     var disqus_shortname = 'ellisv';
     var disqus_identifier = '/2015/08/20/oxid-symfony-httpkernel';
     (function() {
@@ -125,4 +249,30 @@
         dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
     })();
-</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript rel=nofollow>comments powered by Disqus.</a></noscript></main><footer class=footer><small>&copy;<time datetime=2015-08-25T21:16:51+03:00>2015</time>. All rights reserved.</small></footer></div></body></html>
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</main>
+
+    <footer class="footer">
+  <small>
+    &copy; <time datetime="2017-02-12T01:19:17+02:00">2017</time>. All rights reserved.
+  </small>
+</footer>
+
+  </div>
+
+  
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'test', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+</body>
+</html>

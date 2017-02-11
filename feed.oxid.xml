@@ -3,8 +3,8 @@
   <channel>
     <title>Eligijus Vitkauskas personal blog - OXID</title>
     <description>Posts categorized as 'oxid'</description>
-    <link>https://ellisv.github.io</link>
-    <atom:link href="https://ellisv.github.io/feed.oxid.xml" rel="self" type="application/rss+xml" />
+    <link>http://localhost:3000</link>
+    <atom:link href="http://localhost:3000/feed.oxid.xml" rel="self" type="application/rss+xml" />
     
       <item>
         <title>OXID and Symfony Part 3&amp;#58; HttpKernel</title>
@@ -175,8 +175,8 @@ MonologBundle, so we can get this logger by requesting &lt;code&gt;$container-&a
 before I had a talk on knowledge exchange between OXID Core and OXID Professional Services teams.&lt;/p&gt;
 </description>
         <pubDate>Thu, 20 Aug 2015 00:00:00 +0300</pubDate>
-        <link>https://ellisv.github.io/2015/08/20/oxid-symfony-httpkernel/</link>
-        <guid isPermaLink="true">https://ellisv.github.io/2015/08/20/oxid-symfony-httpkernel/</guid>
+        <link>http://localhost:3000/2015/08/20/oxid-symfony-httpkernel/</link>
+        <guid isPermaLink="true">http://localhost:3000/2015/08/20/oxid-symfony-httpkernel/</guid>
       </item>
     
       <item>
@@ -888,8 +888,8 @@ before I had a talk on knowledge exchange between OXID Core and OXID Professiona
 &lt;p&gt;Explanation of Dependency Injection in general was highly inspired by Fabien Potencier slides which are available at &lt;a href=&quot;http://www.slideshare.net/fabpot/dependency-injection-with-php-and-php-53&quot;&gt;slideshare.net&lt;/a&gt;&lt;/p&gt;
 </description>
         <pubDate>Tue, 18 Aug 2015 00:00:00 +0300</pubDate>
-        <link>https://ellisv.github.io/2015/08/18/oxid-symfony-dependencyinjection/</link>
-        <guid isPermaLink="true">https://ellisv.github.io/2015/08/18/oxid-symfony-dependencyinjection/</guid>
+        <link>http://localhost:3000/2015/08/18/oxid-symfony-dependencyinjection/</link>
+        <guid isPermaLink="true">http://localhost:3000/2015/08/18/oxid-symfony-dependencyinjection/</guid>
       </item>
     
       <item>
@@ -1262,8 +1262,8 @@ before I had a talk on knowledge exchange between OXID Core and OXID Professiona
 &lt;/ul&gt;
 </description>
         <pubDate>Tue, 04 Aug 2015 00:00:00 +0300</pubDate>
-        <link>https://ellisv.github.io/2015/08/04/oxid-symfony-composer/</link>
-        <guid isPermaLink="true">https://ellisv.github.io/2015/08/04/oxid-symfony-composer/</guid>
+        <link>http://localhost:3000/2015/08/04/oxid-symfony-composer/</link>
+        <guid isPermaLink="true">http://localhost:3000/2015/08/04/oxid-symfony-composer/</guid>
       </item>
     
   </channel>
